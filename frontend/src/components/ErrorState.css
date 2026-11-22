@@ -1,0 +1,33 @@
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 5rem 2rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.error-icon {
+  width: 36px;
+  height: 36px;
+  color: var(--danger);
+}
+
+.error-retry {
+  padding: 0.42rem 1rem;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 0.838rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.error-retry:hover {
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
