@@ -38,7 +38,7 @@ class SearchControllerTest {
 
     @Test
     void search_validRequest_returns200WithResults() throws Exception {
-        SearchResponse response = new SearchResponse("machine learning", 1, List.of());
+        SearchResponse response = new SearchResponse("machine learning", 1, List.of(), null);
         given(searchService.search(any())).willReturn(response);
 
         mockMvc.perform(post("/api/discovery/search")
@@ -74,7 +74,7 @@ class SearchControllerTest {
 
     @Test
     void search_limitAtMax_returns200() throws Exception {
-        SearchResponse response = new SearchResponse("test", 0, List.of());
+        SearchResponse response = new SearchResponse("test", 0, List.of(), null);
         given(searchService.search(any())).willReturn(response);
 
         mockMvc.perform(post("/api/discovery/search")
