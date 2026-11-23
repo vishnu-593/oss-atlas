@@ -36,4 +36,11 @@ public class GitHubApiClient {
                 .retrieve()
                 .body(GhSearchResponse.class);
     }
+
+    public GhRepo getRepo(String owner, String repo) {
+        return restClient.get()
+                .uri("/repos/{owner}/{repo}", owner, repo)
+                .retrieve()
+                .body(GhRepo.class);
+    }
 }
