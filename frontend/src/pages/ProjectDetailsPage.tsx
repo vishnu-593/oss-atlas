@@ -88,7 +88,7 @@ export function ProjectDetailsPage() {
           </div>
         </div>
 
-        {project.topics.length > 0 && (
+        {(project.topics?.length ?? 0) > 0 && (
           <div className="details-topics">
             <h3>Topics</h3>
             <div className="topics-list">

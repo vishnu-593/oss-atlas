@@ -50,6 +50,12 @@
   flex-wrap: wrap;
 }
 
+.discovery-row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
 .discovery-input {
   flex: 1;
   min-width: 200px;

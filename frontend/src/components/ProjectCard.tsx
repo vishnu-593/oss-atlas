@@ -13,8 +13,10 @@ interface Props {
 }
 
 export function ProjectCard({ project, badge }: Props) {
-  return (
-    <Link to={`/projects/${project.id}`} className="project-card">
+  const isExternal = project.id.startsWith('http')
+
+  const inner = (
+    <>
       <div className="card-header">
         <span className="card-name">{project.name}</span>
         {badge && (
@@ -29,7 +31,7 @@ export function ProjectCard({ project, badge }: Props) {
         <span className="card-tag tag-licence">{project.license}</span>
         <span className="card-lang">{project.language}</span>
       </div>
-      {project.topics.length > 0 && (
+      {(project.topics?.length ?? 0) > 0 && (
         <div className="card-topics">
           {project.topics.slice(0, 4).map(t => (
             <span key={t} className="topic-chip">{t}</span>
@@ -67,6 +69,20 @@ export function ProjectCard({ project, badge }: Props) {
           </span>
         )}
       </div>
+    </>
+  )
+
+  if (isExternal) {
+    return (
+      <a href={project.githubUrl} target="_blank" rel="noreferrer" className="project-card">
+        {inner}
+      </a>
+    )
+  }
+
+  return (
+    <Link to={`/projects/${project.id}`} className="project-card">
+      {inner}
     </Link>
   )
 }

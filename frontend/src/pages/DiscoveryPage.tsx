@@ -12,11 +12,12 @@ export function DiscoveryPage() {
   const [query, setQuery] = useState('')
   const [language, setLanguage] = useState('')
   const [topic, setTopic] = useState('')
+  const [limit, setLimit] = useState(10)
   const { result, loading, error, search } = useDiscovery()
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    void search({ query, language: language || undefined, topic: topic || undefined })
+    void search({ query, language: language || undefined, topic: topic || undefined, limit })
   }
 
   return (
@@ -69,9 +70,22 @@ export function DiscoveryPage() {
               aria-label="Filter by topic"
             />
           </div>
-          <button type="submit" className="discovery-btn" disabled={loading || !query.trim()}>
-            {loading ? 'Searching…' : 'Discover'}
-          </button>
+          <div className="discovery-row">
+            <select
+              className="discovery-select"
+              value={limit}
+              onChange={e => setLimit(Number(e.target.value))}
+              aria-label="Number of results"
+            >
+              <option value={10}>10 results</option>
+              <option value={20}>20 results</option>
+              <option value={30}>30 results</option>
+              <option value={50}>50 results</option>
+            </select>
+            <button type="submit" className="discovery-btn" disabled={loading || !query.trim()}>
+              {loading ? 'Searching…' : 'Discover'}
+            </button>
+          </div>
         </form>
       </div>
 
