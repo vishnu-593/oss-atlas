@@ -67,7 +67,7 @@ class RefreshJobTest {
     @Test
     void run_refreshesExistingCatalogueProjects() {
         CatalogueProjectSummary summary =
-                new CatalogueProjectSummary(1L, "https://github.com/owner/repo");
+                new CatalogueProjectSummary("1", "https://github.com/owner/repo");
         given(catalogueClient.listForRefresh(0, 50)).willReturn(pageOf(summary));
         given(gitHubApiClient.getRepo("owner", "repo")).willReturn(ghRepo("repo"));
         given(searchService.toProject(any())).willReturn(discoveryProject("repo"));
@@ -95,7 +95,7 @@ class RefreshJobTest {
     @Test
     void run_githubFailure_continuesAndLogsFailure() {
         CatalogueProjectSummary summary =
-                new CatalogueProjectSummary(1L, "https://github.com/owner/repo");
+                new CatalogueProjectSummary("1", "https://github.com/owner/repo");
         given(catalogueClient.listForRefresh(0, 50)).willReturn(pageOf(summary));
         given(gitHubApiClient.getRepo("owner", "repo"))
                 .willThrow(new RestClientException("connection refused"));
@@ -107,7 +107,7 @@ class RefreshJobTest {
     @Test
     void run_githubRateLimit_stopsAndLogsWarning() {
         CatalogueProjectSummary summary =
-                new CatalogueProjectSummary(1L, "https://github.com/owner/repo");
+                new CatalogueProjectSummary("1", "https://github.com/owner/repo");
         given(catalogueClient.listForRefresh(0, 50)).willReturn(pageOf(summary));
         RestClientResponseException rateLimited = new RestClientResponseException(
                 "rate limited", 403, "Forbidden", null,
@@ -151,8 +151,8 @@ class RefreshJobTest {
 
     @Test
     void run_partialFailures_remainingProjectsStillImported() {
-        CatalogueProjectSummary good = new CatalogueProjectSummary(1L, "https://github.com/owner/good");
-        CatalogueProjectSummary bad  = new CatalogueProjectSummary(2L, "https://github.com/owner/bad");
+        CatalogueProjectSummary good = new CatalogueProjectSummary("1", "https://github.com/owner/good");
+        CatalogueProjectSummary bad  = new CatalogueProjectSummary("2", "https://github.com/owner/bad");
         given(catalogueClient.listForRefresh(0, 50)).willReturn(pageOf(good, bad));
         given(gitHubApiClient.getRepo("owner", "good")).willReturn(ghRepo("good"));
         given(gitHubApiClient.getRepo("owner", "bad"))
@@ -168,7 +168,7 @@ class RefreshJobTest {
     @Test
     void run_catalogueImportFails_doesNotCrash() {
         CatalogueProjectSummary summary =
-                new CatalogueProjectSummary(1L, "https://github.com/owner/repo");
+                new CatalogueProjectSummary("1", "https://github.com/owner/repo");
         given(catalogueClient.listForRefresh(0, 50)).willReturn(pageOf(summary));
         given(gitHubApiClient.getRepo("owner", "repo")).willReturn(ghRepo("repo"));
         given(searchService.toProject(any())).willReturn(discoveryProject("repo"));

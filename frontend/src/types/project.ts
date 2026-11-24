@@ -58,6 +58,7 @@ export interface DiscoveryRequest {
   query: string
   language?: string
   topic?: string
+  limit?: number
 }
 
 export interface DiscoveryResult {

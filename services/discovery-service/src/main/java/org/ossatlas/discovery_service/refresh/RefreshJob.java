@@ -60,12 +60,12 @@ public class RefreshJob {
                 List<DiscoveryProject> refreshed = new ArrayList<>();
                 for (CatalogueProjectSummary summary : projects) {
                     examined++;
-                    if (summary.repositoryUrl() == null || !summary.repositoryUrl().contains("github.com")) {
+                    if (summary.githubUrl() == null || !summary.githubUrl().contains("github.com")) {
                         skipped++;
                         continue;
                     }
                     try {
-                        String[] ownerRepo = extractOwnerRepo(summary.repositoryUrl());
+                        String[] ownerRepo = extractOwnerRepo(summary.githubUrl());
                         GhRepo ghRepo = gitHubApiClient.getRepo(ownerRepo[0], ownerRepo[1]);
                         refreshed.add(searchService.toProject(ghRepo));
                     } catch (RestClientResponseException e) {
@@ -74,10 +74,10 @@ public class RefreshJob {
                             failures++;
                             break;
                         }
-                        log.warn("Failed to fetch GitHub metadata for {}: {}", summary.repositoryUrl(), e.getMessage());
+                        log.warn("Failed to fetch GitHub metadata for {}: {}", summary.githubUrl(), e.getMessage());
                         failures++;
                     } catch (Exception e) {
-                        log.warn("Unexpected error refreshing {}: {}", summary.repositoryUrl(), e.getMessage());
+                        log.warn("Unexpected error refreshing {}: {}", summary.githubUrl(), e.getMessage());
                         failures++;
                     }
                 }
