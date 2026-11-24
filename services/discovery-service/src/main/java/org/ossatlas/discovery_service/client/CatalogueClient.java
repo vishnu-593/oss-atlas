@@ -36,7 +36,7 @@ public class CatalogueClient {
 
     public CataloguePage listForRefresh(int page, int size) {
         return restClient.get()
-                .uri(ub -> ub.path("/internal/projects")
+                .uri(ub -> ub.path("/internal/projects/refresh")
                         .queryParam("page", page)
                         .queryParam("size", size)
                         .build())
