@@ -13,7 +13,7 @@ interface Props {
 }
 
 export function ProjectCard({ project, badge }: Props) {
-  const isExternal = project.id.startsWith('http')
+  const isExternal = String(project.id).startsWith('http')
 
   const inner = (
     <>
