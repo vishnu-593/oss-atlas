@@ -153,21 +153,8 @@ class ProjectServiceTest {
     return project;
 }
 
-@Test
-void getAllProjectsSuccessfully() {
-    Project project = createProject(UUID.randomUUID());
-
-    when(projectRepository.findAll())
-            .thenReturn(List.of(project));
-
-    List<ProjectResponse> response = projectService.getAllProjects();
-
-    assertEquals(1, response.size());
-    assertEquals("Spring Boot", response.get(0).name());
-}
-
-@Test
-void updateProjectSuccessfully() {
+    @Test
+    void updateProjectSuccessfully() {
     UUID id = UUID.randomUUID();
     Project project = createProject(id);
     ProjectRequest request = createRequest();

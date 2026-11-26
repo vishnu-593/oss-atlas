@@ -10,5 +10,5 @@ public record SearchRequest(
         @Min(0) Integer minStars,
         String license,
         String topic,
-        @Min(1) @Max(50) Integer limit
+        @Min(1) @Max(100) Integer limit
 ) {}

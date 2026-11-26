@@ -27,10 +27,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @RequiredArgsConstructor
 public class RefreshJob {
 
+    private static final int MAX_GITHUB_PAGE = 10; // GitHub caps search results at 1000 (10 × 100)
+    private static final String PHASE1_CURSOR_KEY = "__phase1__"; // cursor key for Phase 1 catalogue page
+
     private final RefreshProperties props;
     private final CatalogueClient catalogueClient;
     private final GitHubApiClient gitHubApiClient;
     private final SearchServiceImpl searchService;
+    private final RefreshCursorRepository cursorRepository;
 
     private final AtomicBoolean running = new AtomicBoolean(false);
 
@@ -50,67 +54,87 @@ public class RefreshJob {
         try {
             log.info("Discovery refresh started");
 
-            // 1. Refresh existing catalogue projects
-            int page = 0;
-            while (true) {
-                CataloguePage cataloguePage = catalogueClient.listForRefresh(page, props.getPageSize());
-                List<CatalogueProjectSummary> projects = cataloguePage.content();
-                if (projects == null || projects.isEmpty()) break;
+            // Phase 1 — disabled (re-fetches existing projects via Core API, 60 req/hour unauthenticated limit)
+//            int phase1Page = cursorRepository.findById(PHASE1_CURSOR_KEY)
+//                    .map(RefreshCursor::getLastPage)
+//                    .orElse(0);
+//            CataloguePage cataloguePage = catalogueClient.listForRefresh(phase1Page, props.getPageSize());
+//            List<CatalogueProjectSummary> projects = cataloguePage.content();
+//            if (projects != null && !projects.isEmpty()) {
+//                List<DiscoveryProject> refreshed = new ArrayList<>();
+//                boolean rateLimited = false;
+//                for (CatalogueProjectSummary summary : projects) {
+//                    examined++;
+//                    if (summary.githubUrl() == null || !summary.githubUrl().contains("github.com")) {
+//                        skipped++;
+//                        continue;
+//                    }
+//                    try {
+//                        String[] ownerRepo = extractOwnerRepo(summary.githubUrl());
+//                        GhRepo ghRepo = gitHubApiClient.getRepo(ownerRepo[0], ownerRepo[1]);
+//                        refreshed.add(searchService.toProject(ghRepo));
+//                    } catch (RestClientResponseException e) {
+//                        if (e.getStatusCode().value() == 403) {
+//                            log.warn("GitHub rate limit hit during Phase 1 — stopping. Examined so far: {}", examined);
+//                            failures++;
+//                            rateLimited = true;
+//                            break;
+//                        }
+//                        log.warn("Failed to fetch GitHub metadata for {}: {}", summary.githubUrl(), e.getMessage());
+//                        failures++;
+//                    } catch (Exception e) {
+//                        log.warn("Unexpected error refreshing {}: {}", summary.githubUrl(), e.getMessage());
+//                        failures++;
+//                    }
+//                }
+//                if (!refreshed.isEmpty()) {
+//                    try {
+//                        CatalogueImportResponse resp = catalogueClient.importProjects(refreshed);
+//                        imported += resp.imported();
+//                        updated  += resp.updated();
+//                    } catch (RestClientException e) {
+//                        log.error("Catalogue import failed during Phase 1: {}", e.getMessage());
+//                        failures += refreshed.size();
+//                    }
+//                }
+//                if (!rateLimited) {
+//                    int nextPhase1Page = (projects.size() < props.getPageSize()) ? 0 : phase1Page + 1;
+//                    saveCursor(PHASE1_CURSOR_KEY, nextPhase1Page);
+//                    log.info("Phase 1 — page {} done ({} projects), next page: {}", phase1Page, projects.size(), nextPhase1Page);
+//                }
+//            } else {
+//                saveCursor(PHASE1_CURSOR_KEY, 0);
+//                log.info("Phase 1 — catalogue empty or end of pages at page {}, cursor reset to 0", phase1Page);
+//            }
 
-                List<DiscoveryProject> refreshed = new ArrayList<>();
-                for (CatalogueProjectSummary summary : projects) {
-                    examined++;
-                    if (summary.githubUrl() == null || !summary.githubUrl().contains("github.com")) {
-                        skipped++;
-                        continue;
-                    }
-                    try {
-                        String[] ownerRepo = extractOwnerRepo(summary.githubUrl());
-                        GhRepo ghRepo = gitHubApiClient.getRepo(ownerRepo[0], ownerRepo[1]);
-                        refreshed.add(searchService.toProject(ghRepo));
-                    } catch (RestClientResponseException e) {
-                        if (e.getStatusCode().value() == 403) {
-                            log.warn("GitHub rate limit hit during refresh — stopping batch. Examined so far: {}", examined);
-                            failures++;
-                            break;
-                        }
-                        log.warn("Failed to fetch GitHub metadata for {}: {}", summary.githubUrl(), e.getMessage());
-                        failures++;
-                    } catch (Exception e) {
-                        log.warn("Unexpected error refreshing {}: {}", summary.githubUrl(), e.getMessage());
-                        failures++;
-                    }
-                }
-
-                if (!refreshed.isEmpty()) {
-                    try {
-                        CatalogueImportResponse resp = catalogueClient.importProjects(refreshed);
-                        imported += resp.imported();
-                        updated  += resp.updated();
-                    } catch (RestClientException e) {
-                        log.error("Catalogue import failed during refresh: {}", e.getMessage());
-                        failures += refreshed.size();
-                    }
-                }
-
-                if (projects.size() < props.getPageSize()) break;
-                page++;
-            }
-
-            // 2. Discover new projects from configured queries
+            // Phase 2 — Discover new projects using paginated category queries
             for (DiscoveryQuery dq : props.getQueries()) {
+                int limit = dq.limit() != null ? Math.min(dq.limit(), 100) : 10;
+                String ghQuery = buildQuery(dq);
+
+                // Read cursor from DB — which page to fetch next for this query
+                int currentPage = cursorRepository.findById(ghQuery)
+                        .map(RefreshCursor::getLastPage)
+                        .orElse(1);
+
                 try {
-                    int limit = dq.limit() != null ? Math.min(dq.limit(), 50) : 10;
-                    String ghQuery = buildQuery(dq);
-                    GhSearchResponse ghResp = gitHubApiClient.search(ghQuery, limit);
+                    GhSearchResponse ghResp = gitHubApiClient.search(ghQuery, limit, currentPage);
                     List<DiscoveryProject> discovered = searchService.deduplicate(
                             ghResp.items().stream().map(searchService::toProject).toList());
+
                     if (!discovered.isEmpty()) {
                         CatalogueImportResponse resp = catalogueClient.importProjects(discovered);
                         imported += resp.imported();
                         updated  += resp.updated();
                         examined += discovered.size();
                     }
+
+                    // Advance cursor: reset to 1 when results run out or max page reached
+                    int nextPage = (ghResp.items().size() < limit || currentPage >= MAX_GITHUB_PAGE)
+                            ? 1 : currentPage + 1;
+                    saveCursor(ghQuery, nextPage);
+                    log.info("Query '{}' — fetched page {}, next page will be {}", dq.query(), currentPage, nextPage);
+
                 } catch (RestClientResponseException e) {
                     if (e.getStatusCode().value() == 403) {
                         log.warn("GitHub rate limit hit during discovery query '{}'", dq.query());
@@ -134,18 +158,26 @@ public class RefreshJob {
         }
     }
 
+    private void saveCursor(String queryName, int nextPage) {
+        RefreshCursor cursor = cursorRepository.findById(queryName).orElse(new RefreshCursor());
+        cursor.setQueryName(queryName);
+        cursor.setLastPage(nextPage);
+        cursor.setUpdatedAt(Instant.now());
+        cursorRepository.save(cursor);
+    }
+
     private static String[] extractOwnerRepo(String repositoryUrl) {
-        String path = URI.create(repositoryUrl).getPath(); // "/owner/repo"
+        String path = URI.create(repositoryUrl).getPath();
         String[] parts = path.split("/");
         return new String[]{parts[1], parts[2]};
     }
 
     private static String buildQuery(DiscoveryQuery dq) {
         StringBuilder sb = new StringBuilder(dq.query().trim());
-        if (hasText(dq.language()))  sb.append(" language:").append(dq.language());
-        if (dq.minStars()    != null) sb.append(" stars:>=").append(dq.minStars());
-        if (hasText(dq.license()))   sb.append(" license:").append(dq.license().toLowerCase());
-        if (hasText(dq.topic()))     sb.append(" topic:").append(dq.topic());
+        if (hasText(dq.language()))   sb.append(" language:").append(dq.language());
+        if (dq.minStars() != null)    sb.append(" stars:>=").append(dq.minStars());
+        if (hasText(dq.license()))    sb.append(" license:").append(dq.license().toLowerCase());
+        if (hasText(dq.topic()))      sb.append(" topic:").append(dq.topic());
         return sb.toString();
     }
 

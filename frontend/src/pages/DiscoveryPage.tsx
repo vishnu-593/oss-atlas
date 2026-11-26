@@ -4,20 +4,49 @@ import { ProjectCard } from '../components/ProjectCard'
 import { LoadingState } from '../components/LoadingState'
 import { ErrorState } from '../components/ErrorState'
 import { EmptyState } from '../components/EmptyState'
+import { importProjects } from '../services/discoveryService'
+import type { Project } from '../types/project'
 import './DiscoveryPage.css'
 
 const LANGUAGES = ['TypeScript', 'JavaScript', 'Python', 'Java', 'Go', 'Rust', 'C', 'C++']
+const LICENSES = ['MIT', 'Apache-2.0', 'GPL-3.0', 'BSD-3-Clause', 'MPL-2.0', 'ISC']
 
 export function DiscoveryPage() {
   const [query, setQuery] = useState('')
   const [language, setLanguage] = useState('')
   const [topic, setTopic] = useState('')
+  const [minStars, setMinStars] = useState('')
+  const [license, setLicense] = useState('')
   const [limit, setLimit] = useState(10)
   const { result, loading, error, search } = useDiscovery()
+  const [importing, setImporting] = useState<Record<string, boolean>>({})
+  const [importedIds, setImportedIds] = useState<Set<string>>(new Set())
+  const [importError, setImportError] = useState<string | null>(null)
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    void search({ query, language: language || undefined, topic: topic || undefined, limit })
+    void search({
+      query,
+      language: language || undefined,
+      topic: topic || undefined,
+      minStars: minStars ? Number(minStars) : undefined,
+      license: license || undefined,
+      limit,
+    })
+  }
+
+  async function handleImport(project: Project) {
+    const key = project.githubUrl
+    setImporting(s => ({ ...s, [key]: true }))
+    setImportError(null)
+    try {
+      await importProjects([project])
+      setImportedIds(s => new Set(s).add(key))
+    } catch (err) {
+      setImportError(String(err))
+    } finally {
+      setImporting(s => ({ ...s, [key]: false }))
+    }
   }
 
   return (
@@ -69,6 +98,24 @@ export function DiscoveryPage() {
               placeholder="Topic, e.g. database"
               aria-label="Filter by topic"
             />
+            <input
+              type="number"
+              className="discovery-input discovery-input-sm"
+              value={minStars}
+              onChange={e => setMinStars(e.target.value)}
+              placeholder="Min stars, e.g. 500"
+              aria-label="Minimum stars"
+              min={0}
+            />
+            <select
+              className="discovery-select"
+              value={license}
+              onChange={e => setLicense(e.target.value)}
+              aria-label="Filter by license"
+            >
+              <option value="">Any license</option>
+              {LICENSES.map(l => <option key={l} value={l}>{l}</option>)}
+            </select>
           </div>
           <div className="discovery-row">
             <select
@@ -91,6 +138,7 @@ export function DiscoveryPage() {
 
       {loading && <LoadingState message="Searching GitHub…" />}
       {error && !loading && <ErrorState message={error} />}
+      {importError && <div className="import-error">{importError}</div>}
 
       {result && !loading && (
         <div className="discovery-results">
@@ -98,6 +146,8 @@ export function DiscoveryPage() {
             Found {result.totalFound} project{result.totalFound !== 1 ? 's' : ''} matching "{result.query}"
             {language && <> · {language}</>}
             {topic && <> · #{topic}</>}
+            {minStars && <> · ★ {minStars}+</>}
+            {license && <> · {license}</>}
           </div>
 
           {result.indexed.length > 0 && (
@@ -119,7 +169,23 @@ export function DiscoveryPage() {
                 {result.discovered.length} project{result.discovered.length !== 1 ? 's' : ''}
               </h2>
               <div className="discovery-grid">
-                {result.discovered.map(p => <ProjectCard key={p.id} project={p} badge="discovered" />)}
+                {result.discovered.map(p => {
+                  const key = p.githubUrl
+                  const isImported = importedIds.has(key)
+                  const isImporting = importing[key]
+                  return (
+                    <div key={p.id} className="discovery-card-wrapper">
+                      <ProjectCard project={p} badge="discovered" />
+                      <button
+                        className={`import-btn${isImported ? ' import-btn--done' : ''}`}
+                        onClick={() => handleImport(p)}
+                        disabled={isImporting || isImported}
+                      >
+                        {isImported ? '✓ Saved to Catalogue' : isImporting ? 'Saving…' : '+ Save to Catalogue'}
+                      </button>
+                    </div>
+                  )
+                })}
               </div>
             </section>
           )}

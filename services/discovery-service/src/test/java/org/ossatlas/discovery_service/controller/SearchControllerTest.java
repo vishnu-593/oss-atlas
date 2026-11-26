@@ -5,13 +5,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.ossatlas.discovery_service.client.CatalogueClient;
 import org.ossatlas.discovery_service.dto.SearchResponse;
 import org.ossatlas.discovery_service.exception.GlobalExceptionHandler;
-import org.ossatlas.discovery_service.service.DiscoveryService;
 import org.ossatlas.discovery_service.service.SearchService;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import org.ossatlas.discovery_service.refresh.RefreshJob;
 
 import java.util.List;
 
@@ -24,21 +26,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class SearchControllerTest {
 
     @Mock SearchService searchService;
-    @Mock DiscoveryService discoveryService;
+    @Mock CatalogueClient catalogueClient;
+    @Mock RefreshJob refreshJob;
 
     MockMvc mockMvc;
 
     @BeforeEach
     void setup() {
         mockMvc = MockMvcBuilders
-                .standaloneSetup(new DiscoveryController(discoveryService, searchService))
+                .standaloneSetup(new DiscoveryController(searchService, catalogueClient, refreshJob))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
 
     @Test
     void search_validRequest_returns200WithResults() throws Exception {
-        SearchResponse response = new SearchResponse("machine learning", 1, List.of(), null);
+        SearchResponse response = new SearchResponse("machine learning", 1, List.of());
         given(searchService.search(any())).willReturn(response);
 
         mockMvc.perform(post("/api/discovery/search")
@@ -74,7 +77,7 @@ class SearchControllerTest {
 
     @Test
     void search_limitAtMax_returns200() throws Exception {
-        SearchResponse response = new SearchResponse("test", 0, List.of(), null);
+        SearchResponse response = new SearchResponse("test", 0, List.of());
         given(searchService.search(any())).willReturn(response);
 
         mockMvc.perform(post("/api/discovery/search")
@@ -90,7 +93,7 @@ class SearchControllerTest {
         mockMvc.perform(post("/api/discovery/search")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"query":"test","limit":51}
+                                {"query":"test","limit":101}
                                 """))
                 .andExpect(status().isBadRequest());
     }
