@@ -1,7 +1,6 @@
 package org.ossatlas.discovery_service.refresh;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -46,6 +45,9 @@ class RefreshJobTest {
         org.mockito.Mockito.lenient().when(props.getQueries()).thenReturn(List.of());
         org.mockito.Mockito.lenient().when(cursorRepository.findById(anyString()))
                 .thenReturn(java.util.Optional.empty());
+        // Phase 1 always calls listForRefresh; default to empty so discovery-only tests pass
+        org.mockito.Mockito.lenient().when(catalogueClient.listForRefresh(anyInt(), anyInt()))
+                .thenReturn(emptyPage());
     }
 
     private static CataloguePage emptyPage() {
@@ -69,7 +71,6 @@ class RefreshJobTest {
     // ---- 3. Successful scheduled refresh ----
 
     @Test
-    @Disabled("Phase 1 disabled — re-enable when Core API rate limit is handled")
     void run_refreshesExistingCatalogueProjects() {
         CatalogueProjectSummary summary =
                 new CatalogueProjectSummary("1", "https://github.com/owner/repo");
@@ -88,7 +89,6 @@ class RefreshJobTest {
     // ---- 4. Empty refresh results ----
 
     @Test
-    @Disabled("Phase 1 disabled — re-enable when Core API rate limit is handled")
     void run_emptyCatalogue_completesSilently() {
         given(catalogueClient.listForRefresh(0, 50)).willReturn(emptyPage());
 
@@ -99,7 +99,6 @@ class RefreshJobTest {
     // ---- 5. GitHub failure during refresh ----
 
     @Test
-    @Disabled("Phase 1 disabled — re-enable when Core API rate limit is handled")
     void run_githubFailure_continuesAndLogsFailure() {
         CatalogueProjectSummary summary =
                 new CatalogueProjectSummary("1", "https://github.com/owner/repo");
@@ -112,7 +111,6 @@ class RefreshJobTest {
     }
 
     @Test
-    @Disabled("Phase 1 disabled — re-enable when Core API rate limit is handled")
     void run_githubRateLimit_stopsAndLogsWarning() {
         CatalogueProjectSummary summary =
                 new CatalogueProjectSummary("1", "https://github.com/owner/repo");
@@ -158,7 +156,6 @@ class RefreshJobTest {
     // ---- 9. Partial failures and logging ----
 
     @Test
-    @Disabled("Phase 1 disabled — re-enable when Core API rate limit is handled")
     void run_partialFailures_remainingProjectsStillImported() {
         CatalogueProjectSummary good = new CatalogueProjectSummary("1", "https://github.com/owner/good");
         CatalogueProjectSummary bad  = new CatalogueProjectSummary("2", "https://github.com/owner/bad");
@@ -175,7 +172,6 @@ class RefreshJobTest {
     }
 
     @Test
-    @Disabled("Phase 1 disabled — re-enable when Core API rate limit is handled")
     void run_catalogueImportFails_doesNotCrash() {
         CatalogueProjectSummary summary =
                 new CatalogueProjectSummary("1", "https://github.com/owner/repo");
