@@ -53,52 +53,53 @@ public class RefreshJob {
         try {
             log.info("Discovery refresh started");
 
-            // Phase 1 — Refresh existing catalogue projects with latest GitHub metadata
-            int page = 0;
-            while (true) {
-                CataloguePage cataloguePage = catalogueClient.listForRefresh(page, props.getPageSize());
-                List<CatalogueProjectSummary> projects = cataloguePage.content();
-                if (projects == null || projects.isEmpty()) break;
-
-                List<DiscoveryProject> refreshed = new ArrayList<>();
-                for (CatalogueProjectSummary summary : projects) {
-                    examined++;
-                    if (summary.githubUrl() == null || !summary.githubUrl().contains("github.com")) {
-                        skipped++;
-                        continue;
-                    }
-                    try {
-                        String[] ownerRepo = extractOwnerRepo(summary.githubUrl());
-                        GhRepo ghRepo = gitHubApiClient.getRepo(ownerRepo[0], ownerRepo[1]);
-                        refreshed.add(searchService.toProject(ghRepo));
-                    } catch (RestClientResponseException e) {
-                        if (e.getStatusCode().value() == 403) {
-                            log.warn("GitHub rate limit hit during refresh — stopping batch. Examined so far: {}", examined);
-                            failures++;
-                            break;
-                        }
-                        log.warn("Failed to fetch GitHub metadata for {}: {}", summary.githubUrl(), e.getMessage());
-                        failures++;
-                    } catch (Exception e) {
-                        log.warn("Unexpected error refreshing {}: {}", summary.githubUrl(), e.getMessage());
-                        failures++;
-                    }
-                }
-
-                if (!refreshed.isEmpty()) {
-                    try {
-                        CatalogueImportResponse resp = catalogueClient.importProjects(refreshed);
-                        imported += resp.imported();
-                        updated  += resp.updated();
-                    } catch (RestClientException e) {
-                        log.error("Catalogue import failed during refresh: {}", e.getMessage());
-                        failures += refreshed.size();
-                    }
-                }
-
-                if (projects.size() < props.getPageSize()) break;
-                page++;
-            }
+            // Phase 1 — disabled for now (re-fetches each existing project from GitHub Core API,
+            // hits 60 req/hour unauthenticated limit when DB has many projects)
+//            int page = 0;
+//            while (true) {
+//                CataloguePage cataloguePage = catalogueClient.listForRefresh(page, props.getPageSize());
+//                List<CatalogueProjectSummary> projects = cataloguePage.content();
+//                if (projects == null || projects.isEmpty()) break;
+//
+//                List<DiscoveryProject> refreshed = new ArrayList<>();
+//                for (CatalogueProjectSummary summary : projects) {
+//                    examined++;
+//                    if (summary.githubUrl() == null || !summary.githubUrl().contains("github.com")) {
+//                        skipped++;
+//                        continue;
+//                    }
+//                    try {
+//                        String[] ownerRepo = extractOwnerRepo(summary.githubUrl());
+//                        GhRepo ghRepo = gitHubApiClient.getRepo(ownerRepo[0], ownerRepo[1]);
+//                        refreshed.add(searchService.toProject(ghRepo));
+//                    } catch (RestClientResponseException e) {
+//                        if (e.getStatusCode().value() == 403) {
+//                            log.warn("GitHub rate limit hit during refresh — stopping batch. Examined so far: {}", examined);
+//                            failures++;
+//                            break;
+//                        }
+//                        log.warn("Failed to fetch GitHub metadata for {}: {}", summary.githubUrl(), e.getMessage());
+//                        failures++;
+//                    } catch (Exception e) {
+//                        log.warn("Unexpected error refreshing {}: {}", summary.githubUrl(), e.getMessage());
+//                        failures++;
+//                    }
+//                }
+//
+//                if (!refreshed.isEmpty()) {
+//                    try {
+//                        CatalogueImportResponse resp = catalogueClient.importProjects(refreshed);
+//                        imported += resp.imported();
+//                        updated  += resp.updated();
+//                    } catch (RestClientException e) {
+//                        log.error("Catalogue import failed during refresh: {}", e.getMessage());
+//                        failures += refreshed.size();
+//                    }
+//                }
+//
+//                if (projects.size() < props.getPageSize()) break;
+//                page++;
+//            }
 
             // Phase 2 — Discover new projects using paginated category queries
             for (DiscoveryQuery dq : props.getQueries()) {
