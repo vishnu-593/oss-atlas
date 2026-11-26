@@ -35,6 +35,7 @@ class RefreshJobTest {
     @Mock CatalogueClient catalogueClient;
     @Mock GitHubApiClient gitHubApiClient;
     @Mock SearchServiceImpl searchService;
+    @Mock RefreshCursorRepository cursorRepository;
     @InjectMocks RefreshJob job;
 
     @BeforeEach
@@ -42,6 +43,8 @@ class RefreshJobTest {
         org.mockito.Mockito.lenient().when(props.isEnabled()).thenReturn(true);
         org.mockito.Mockito.lenient().when(props.getPageSize()).thenReturn(50);
         org.mockito.Mockito.lenient().when(props.getQueries()).thenReturn(List.of());
+        org.mockito.Mockito.lenient().when(cursorRepository.findById(anyString()))
+                .thenReturn(java.util.Optional.empty());
     }
 
     private static CataloguePage emptyPage() {
@@ -186,7 +189,8 @@ class RefreshJobTest {
         DiscoveryQuery dq = new DiscoveryQuery("spring boot", null, null, null, null, 5);
         given(props.getQueries()).willReturn(List.of(dq));
         GhRepo repo = ghRepo("spring-example");
-        given(gitHubApiClient.search(contains("spring boot"), eq(5)))
+        given(cursorRepository.findById(anyString())).willReturn(java.util.Optional.empty());
+        given(gitHubApiClient.search(contains("spring boot"), eq(5), eq(1)))
                 .willReturn(new GhSearchResponse(1, List.of(repo)));
         given(searchService.toProject(repo)).willReturn(discoveryProject("spring-example"));
         given(searchService.deduplicate(anyList())).willAnswer(inv -> inv.getArgument(0));
@@ -195,7 +199,7 @@ class RefreshJobTest {
 
         job.run();
 
-        verify(gitHubApiClient).search(contains("spring boot"), eq(5));
+        verify(gitHubApiClient).search(contains("spring boot"), eq(5), eq(1));
         verify(catalogueClient).importProjects(anyList());
     }
 }

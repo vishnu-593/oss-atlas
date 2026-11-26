@@ -55,7 +55,7 @@ class SearchServiceImplTest {
 
     @Test
     void search_returnsMappedProjects() {
-        given(gitHubApiClient.search(anyString(), anyInt()))
+        given(gitHubApiClient.search(anyString(), anyInt(), anyInt()))
                 .willReturn(response(repo("project-a", "https://github.com/o/project-a", "Java", 500)));
 
         SearchResponse result = service.search(req("java tools"));
@@ -75,7 +75,7 @@ class SearchServiceImplTest {
 
     @Test
     void search_emptyResults_returnsEmptyList() {
-        given(gitHubApiClient.search(anyString(), anyInt()))
+        given(gitHubApiClient.search(anyString(), anyInt(), anyInt()))
                 .willReturn(new GhSearchResponse(0, List.of()));
 
         SearchResponse result = service.search(req("obscure-query-xyz"));
@@ -102,13 +102,13 @@ class SearchServiceImplTest {
 
     @Test
     void search_withLanguage_passesQualifierToGitHub() {
-        given(gitHubApiClient.search(anyString(), anyInt()))
+        given(gitHubApiClient.search(anyString(), anyInt(), anyInt()))
                 .willReturn(new GhSearchResponse(0, List.of()));
         ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
 
         service.search(new SearchRequest("ml", "Python", null, null, null, null));
 
-        org.mockito.Mockito.verify(gitHubApiClient).search(queryCaptor.capture(), anyInt());
+        org.mockito.Mockito.verify(gitHubApiClient).search(queryCaptor.capture(), anyInt(), anyInt());
         assertThat(queryCaptor.getValue()).contains("language:Python");
     }
 
@@ -122,13 +122,13 @@ class SearchServiceImplTest {
 
     @Test
     void search_withMinStars_passesQualifierToGitHub() {
-        given(gitHubApiClient.search(anyString(), anyInt()))
+        given(gitHubApiClient.search(anyString(), anyInt(), anyInt()))
                 .willReturn(new GhSearchResponse(0, List.of()));
         ArgumentCaptor<String> queryCaptor = ArgumentCaptor.forClass(String.class);
 
         service.search(new SearchRequest("ml", null, 500, null, null, null));
 
-        org.mockito.Mockito.verify(gitHubApiClient).search(queryCaptor.capture(), anyInt());
+        org.mockito.Mockito.verify(gitHubApiClient).search(queryCaptor.capture(), anyInt(), anyInt());
         assertThat(queryCaptor.getValue()).contains("stars:>=500");
     }
 
@@ -167,7 +167,7 @@ class SearchServiceImplTest {
 
     @Test
     void search_missingMetadata_usesDefaults() {
-        given(gitHubApiClient.search(anyString(), anyInt()))
+        given(gitHubApiClient.search(anyString(), anyInt(), anyInt()))
                 .willReturn(response(repoMinimal("sparse-project", "https://github.com/o/sparse")));
 
         SearchResponse result = service.search(req("sparse"));
@@ -191,7 +191,7 @@ class SearchServiceImplTest {
         GhRepo dup3 = repo("project-a", "HTTPS://GITHUB.COM/O/PROJECT-A",  "Java", 100); // uppercase
         GhRepo unique = repo("other", "https://github.com/o/other", "Go", 50);
 
-        given(gitHubApiClient.search(anyString(), anyInt()))
+        given(gitHubApiClient.search(anyString(), anyInt(), anyInt()))
                 .willReturn(new GhSearchResponse(4, List.of(dup1, dup2, dup3, unique)));
 
         SearchResponse result = service.search(req("test"));
@@ -205,7 +205,7 @@ class SearchServiceImplTest {
 
     @Test
     void search_githubApiFailure_propagatesRestClientException() {
-        given(gitHubApiClient.search(anyString(), anyInt()))
+        given(gitHubApiClient.search(anyString(), anyInt(), anyInt()))
                 .willThrow(new RestClientException("connection refused"));
 
         assertThatThrownBy(() -> service.search(req("test")))
@@ -217,31 +217,31 @@ class SearchServiceImplTest {
 
     @Test
     void search_respectsDefaultLimit_whenLimitNull() {
-        given(gitHubApiClient.search(anyString(), eq(SearchServiceImpl.DEFAULT_LIMIT)))
+        given(gitHubApiClient.search(anyString(), eq(SearchServiceImpl.DEFAULT_LIMIT), eq(1)))
                 .willReturn(new GhSearchResponse(0, List.of()));
 
         service.search(new SearchRequest("test", null, null, null, null, null));
 
-        org.mockito.Mockito.verify(gitHubApiClient).search(anyString(), eq(SearchServiceImpl.DEFAULT_LIMIT));
+        org.mockito.Mockito.verify(gitHubApiClient).search(anyString(), eq(SearchServiceImpl.DEFAULT_LIMIT), eq(1));
     }
 
     @Test
     void search_capsLimitAtMaximum() {
-        given(gitHubApiClient.search(anyString(), eq(SearchServiceImpl.MAX_LIMIT)))
+        given(gitHubApiClient.search(anyString(), eq(SearchServiceImpl.MAX_LIMIT), eq(1)))
                 .willReturn(new GhSearchResponse(0, List.of()));
 
         service.search(new SearchRequest("test", null, null, null, null, 999));
 
-        org.mockito.Mockito.verify(gitHubApiClient).search(anyString(), eq(SearchServiceImpl.MAX_LIMIT));
+        org.mockito.Mockito.verify(gitHubApiClient).search(anyString(), eq(SearchServiceImpl.MAX_LIMIT), eq(1));
     }
 
     @Test
     void search_usesProvidedLimit() {
-        given(gitHubApiClient.search(anyString(), eq(5)))
+        given(gitHubApiClient.search(anyString(), eq(5), eq(1)))
                 .willReturn(new GhSearchResponse(0, List.of()));
 
         service.search(new SearchRequest("test", null, null, null, null, 5));
 
-        org.mockito.Mockito.verify(gitHubApiClient).search(anyString(), eq(5));
+        org.mockito.Mockito.verify(gitHubApiClient).search(anyString(), eq(5), eq(1));
     }
 }
