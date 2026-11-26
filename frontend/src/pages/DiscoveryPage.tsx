@@ -9,11 +9,14 @@ import type { Project } from '../types/project'
 import './DiscoveryPage.css'
 
 const LANGUAGES = ['TypeScript', 'JavaScript', 'Python', 'Java', 'Go', 'Rust', 'C', 'C++']
+const LICENSES = ['MIT', 'Apache-2.0', 'GPL-3.0', 'BSD-3-Clause', 'MPL-2.0', 'ISC']
 
 export function DiscoveryPage() {
   const [query, setQuery] = useState('')
   const [language, setLanguage] = useState('')
   const [topic, setTopic] = useState('')
+  const [minStars, setMinStars] = useState('')
+  const [license, setLicense] = useState('')
   const [limit, setLimit] = useState(10)
   const { result, loading, error, search } = useDiscovery()
   const [importing, setImporting] = useState<Record<string, boolean>>({})
@@ -22,7 +25,14 @@ export function DiscoveryPage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    void search({ query, language: language || undefined, topic: topic || undefined, limit })
+    void search({
+      query,
+      language: language || undefined,
+      topic: topic || undefined,
+      minStars: minStars ? Number(minStars) : undefined,
+      license: license || undefined,
+      limit,
+    })
   }
 
   async function handleImport(project: Project) {
@@ -88,6 +98,24 @@ export function DiscoveryPage() {
               placeholder="Topic, e.g. database"
               aria-label="Filter by topic"
             />
+            <input
+              type="number"
+              className="discovery-input discovery-input-sm"
+              value={minStars}
+              onChange={e => setMinStars(e.target.value)}
+              placeholder="Min stars, e.g. 500"
+              aria-label="Minimum stars"
+              min={0}
+            />
+            <select
+              className="discovery-select"
+              value={license}
+              onChange={e => setLicense(e.target.value)}
+              aria-label="Filter by license"
+            >
+              <option value="">Any license</option>
+              {LICENSES.map(l => <option key={l} value={l}>{l}</option>)}
+            </select>
           </div>
           <div className="discovery-row">
             <select
@@ -118,6 +146,8 @@ export function DiscoveryPage() {
             Found {result.totalFound} project{result.totalFound !== 1 ? 's' : ''} matching "{result.query}"
             {language && <> · {language}</>}
             {topic && <> · #{topic}</>}
+            {minStars && <> · ★ {minStars}+</>}
+            {license && <> · {license}</>}
           </div>
 
           {result.indexed.length > 0 && (
