@@ -1,17 +1,14 @@
 package org.ossatlas.discovery_service.service;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.ossatlas.discovery_service.client.CatalogueClient;
 import org.ossatlas.discovery_service.dto.DiscoveryProject;
 import org.ossatlas.discovery_service.dto.SearchRequest;
 import org.ossatlas.discovery_service.dto.SearchResponse;
-import org.ossatlas.discovery_service.integration.catalogue.CatalogueImportResponse;
 import org.ossatlas.discovery_service.integration.github.GhLicense;
 import org.ossatlas.discovery_service.integration.github.GhOwner;
 import org.ossatlas.discovery_service.integration.github.GhRepo;
@@ -30,18 +27,7 @@ import static org.mockito.BDDMockito.given;
 class SearchServiceImplTest {
 
     @Mock GitHubApiClient gitHubApiClient;
-    @Mock CatalogueClient catalogueClient;
     @InjectMocks SearchServiceImpl service;
-
-    private static final CatalogueImportResponse OK_IMPORT =
-            new CatalogueImportResponse(1, 1, 0, 0, "Project import completed");
-
-    @BeforeEach
-    void stubCatalogue() {
-        org.mockito.Mockito.lenient()
-                .when(catalogueClient.importProjects(org.mockito.ArgumentMatchers.anyList()))
-                .thenReturn(OK_IMPORT);
-    }
 
     // ---- helpers ----
 

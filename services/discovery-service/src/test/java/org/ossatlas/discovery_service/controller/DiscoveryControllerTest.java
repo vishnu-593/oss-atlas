@@ -5,67 +5,71 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.ossatlas.discovery_service.dto.DiscoveredProject;
-import org.ossatlas.discovery_service.dto.DiscoveryResult;
-import org.ossatlas.discovery_service.dto.ProjectStatus;
+import org.ossatlas.discovery_service.client.CatalogueClient;
 import org.ossatlas.discovery_service.exception.GlobalExceptionHandler;
-import org.ossatlas.discovery_service.service.DiscoveryService;
+import org.ossatlas.discovery_service.integration.catalogue.CatalogueImportResponse;
 import org.ossatlas.discovery_service.service.SearchService;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
 class DiscoveryControllerTest {
 
-    @Mock DiscoveryService discoveryService;
     @Mock SearchService searchService;
+    @Mock CatalogueClient catalogueClient;
 
     MockMvc mockMvc;
 
     @BeforeEach
     void setup() {
         mockMvc = MockMvcBuilders
-                .standaloneSetup(new DiscoveryController(discoveryService, searchService))
+                .standaloneSetup(new DiscoveryController(searchService, catalogueClient))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
 
-    private static final DiscoveryResult SAMPLE = new DiscoveryResult(
-            "react", 2, 0, 10,
-            List.of(
-                    new DiscoveredProject(1L, "facebook/react", "A JS library",
-                            "https://github.com/facebook/react", "JavaScript", 231000,
-                            "MIT License", ProjectStatus.INDEXED, 4L),
-                    new DiscoveredProject(2L, "pmndrs/react-three-fiber", "React renderer for Three.js",
-                            "https://github.com/pmndrs/react-three-fiber", "TypeScript", 25000,
-                            "MIT License", ProjectStatus.NEW, null)
-            )
-    );
-
     @Test
-    void discover_returns200WithResults() throws Exception {
-        given(discoveryService.discover(eq("react"), anyInt(), anyInt())).willReturn(SAMPLE);
+    void import_validRequest_returns200WithImportResult() throws Exception {
+        CatalogueImportResponse importResponse =
+                new CatalogueImportResponse(1, 1, 0, 0, "Project import completed");
+        given(catalogueClient.importProjects(anyList())).willReturn(importResponse);
 
-        mockMvc.perform(get("/api/discover").param("q", "react"))
+        mockMvc.perform(post("/api/discovery/import")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "projects": [{
+                                    "name": "spring-boot",
+                                    "description": "Java framework",
+                                    "githubUrl": "https://github.com/spring-projects/spring-boot",
+                                    "owner": "spring-projects",
+                                    "language": "Java",
+                                    "license": "Apache-2.0",
+                                    "stars": 75000,
+                                    "forks": 40000,
+                                    "topics": ["java","spring"],
+                                    "lastUpdated": "2026-11-01T00:00:00Z"
+                                  }]
+                                }
+                                """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.query").value("react"))
-                .andExpect(jsonPath("$.totalGithubResults").value(2))
-                .andExpect(jsonPath("$.results[0].status").value("INDEXED"))
-                .andExpect(jsonPath("$.results[0].catalogueId").value(4))
-                .andExpect(jsonPath("$.results[1].status").value("NEW"))
-                .andExpect(jsonPath("$.results[1].catalogueId").doesNotExist());
+                .andExpect(jsonPath("$.received").value(1))
+                .andExpect(jsonPath("$.imported").value(1));
     }
 
     @Test
-    void discover_missingQuery_returns400() throws Exception {
-        mockMvc.perform(get("/api/discover"))
+    void import_emptyProjects_returns400() throws Exception {
+        mockMvc.perform(post("/api/discovery/import")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"projects": []}
+                                """))
                 .andExpect(status().isBadRequest());
     }
 }
