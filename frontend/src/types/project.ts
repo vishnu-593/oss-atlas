@@ -58,6 +58,8 @@ export interface DiscoveryRequest {
   query: string
   language?: string
   topic?: string
+  minStars?: number
+  license?: string
   limit?: number
 }
 

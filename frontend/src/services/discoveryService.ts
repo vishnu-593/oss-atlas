@@ -21,6 +21,14 @@ interface BackendSearchResponse {
   projects: BackendProject[]
 }
 
+interface ImportResult {
+  received: number
+  imported: number
+  updated: number
+  duplicates: number
+  message: string
+}
+
 function toProject(p: BackendProject, index: number): Project {
   return {
     id: p.githubUrl ?? String(index),
@@ -66,3 +74,29 @@ export async function discoverProjects(request: DiscoveryRequest): Promise<Disco
     return { indexed, discovered, query, totalFound: matches.length }
   }
 }
+
+export async function importProjects(projects: Project[]): Promise<ImportResult> {
+  const body = {
+    projects: projects.map(p => ({
+      name: p.name,
+      description: p.description,
+      githubUrl: p.githubUrl,
+      owner: p.owner,
+      language: p.language,
+      license: p.license,
+      stars: p.stars,
+      forks: p.forks,
+      topics: p.topics,
+      lastUpdated: p.lastUpdated || new Date().toISOString(),
+    })),
+  }
+  const res = await fetch(`${API_URLS.DISCOVERY_BASE}/api/discovery/import`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(8000),
+  })
+  if (!res.ok) throw new Error(`Import failed: HTTP ${res.status}`)
+  return res.json() as Promise<ImportResult>
+}
+
