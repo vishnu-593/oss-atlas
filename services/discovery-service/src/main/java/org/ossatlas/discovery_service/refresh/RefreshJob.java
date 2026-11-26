@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class RefreshJob {
 
     private static final int MAX_GITHUB_PAGE = 10; // GitHub caps search results at 1000 (10 × 100)
+    private static final String PHASE1_CURSOR_KEY = "__phase1__"; // cursor key for Phase 1 catalogue page
 
     private final RefreshProperties props;
     private final CatalogueClient catalogueClient;
@@ -53,53 +54,66 @@ public class RefreshJob {
         try {
             log.info("Discovery refresh started");
 
-            // Phase 1 — disabled for now (re-fetches each existing project from GitHub Core API,
-            // hits 60 req/hour unauthenticated limit when DB has many projects)
-//            int page = 0;
-//            while (true) {
-//                CataloguePage cataloguePage = catalogueClient.listForRefresh(page, props.getPageSize());
-//                List<CatalogueProjectSummary> projects = cataloguePage.content();
-//                if (projects == null || projects.isEmpty()) break;
-//
-//                List<DiscoveryProject> refreshed = new ArrayList<>();
-//                for (CatalogueProjectSummary summary : projects) {
-//                    examined++;
-//                    if (summary.githubUrl() == null || !summary.githubUrl().contains("github.com")) {
-//                        skipped++;
-//                        continue;
-//                    }
-//                    try {
-//                        String[] ownerRepo = extractOwnerRepo(summary.githubUrl());
-//                        GhRepo ghRepo = gitHubApiClient.getRepo(ownerRepo[0], ownerRepo[1]);
-//                        refreshed.add(searchService.toProject(ghRepo));
-//                    } catch (RestClientResponseException e) {
-//                        if (e.getStatusCode().value() == 403) {
-//                            log.warn("GitHub rate limit hit during refresh — stopping batch. Examined so far: {}", examined);
-//                            failures++;
-//                            break;
-//                        }
-//                        log.warn("Failed to fetch GitHub metadata for {}: {}", summary.githubUrl(), e.getMessage());
-//                        failures++;
-//                    } catch (Exception e) {
-//                        log.warn("Unexpected error refreshing {}: {}", summary.githubUrl(), e.getMessage());
-//                        failures++;
-//                    }
-//                }
-//
-//                if (!refreshed.isEmpty()) {
-//                    try {
-//                        CatalogueImportResponse resp = catalogueClient.importProjects(refreshed);
-//                        imported += resp.imported();
-//                        updated  += resp.updated();
-//                    } catch (RestClientException e) {
-//                        log.error("Catalogue import failed during refresh: {}", e.getMessage());
-//                        failures += refreshed.size();
-//                    }
-//                }
-//
-//                if (projects.size() < props.getPageSize()) break;
-//                page++;
-//            }
+            // Phase 1 — Refresh one page (up to pageSize) of existing catalogue projects per trigger.
+            // Cursor advances across triggers so all projects get refreshed over time.
+            // Per-trigger cost: ≤50 Core API calls, stays within 60/hour unauthenticated limit.
+            int phase1Page = cursorRepository.findById(PHASE1_CURSOR_KEY)
+                    .map(RefreshCursor::getLastPage)
+                    .orElse(0); // catalogue pages are 0-indexed
+
+            CataloguePage cataloguePage = catalogueClient.listForRefresh(phase1Page, props.getPageSize());
+            List<CatalogueProjectSummary> projects = cataloguePage.content();
+
+            if (projects != null && !projects.isEmpty()) {
+                List<DiscoveryProject> refreshed = new ArrayList<>();
+                boolean rateLimited = false;
+                for (CatalogueProjectSummary summary : projects) {
+                    examined++;
+                    if (summary.githubUrl() == null || !summary.githubUrl().contains("github.com")) {
+                        skipped++;
+                        continue;
+                    }
+                    try {
+                        String[] ownerRepo = extractOwnerRepo(summary.githubUrl());
+                        GhRepo ghRepo = gitHubApiClient.getRepo(ownerRepo[0], ownerRepo[1]);
+                        refreshed.add(searchService.toProject(ghRepo));
+                    } catch (RestClientResponseException e) {
+                        if (e.getStatusCode().value() == 403) {
+                            log.warn("GitHub rate limit hit during Phase 1 — stopping. Examined so far: {}", examined);
+                            failures++;
+                            rateLimited = true;
+                            break;
+                        }
+                        log.warn("Failed to fetch GitHub metadata for {}: {}", summary.githubUrl(), e.getMessage());
+                        failures++;
+                    } catch (Exception e) {
+                        log.warn("Unexpected error refreshing {}: {}", summary.githubUrl(), e.getMessage());
+                        failures++;
+                    }
+                }
+
+                if (!refreshed.isEmpty()) {
+                    try {
+                        CatalogueImportResponse resp = catalogueClient.importProjects(refreshed);
+                        imported += resp.imported();
+                        updated  += resp.updated();
+                    } catch (RestClientException e) {
+                        log.error("Catalogue import failed during Phase 1: {}", e.getMessage());
+                        failures += refreshed.size();
+                    }
+                }
+
+                if (!rateLimited) {
+                    // Advance cursor: wrap to 0 when last page (fewer results than pageSize)
+                    int nextPhase1Page = (projects.size() < props.getPageSize()) ? 0 : phase1Page + 1;
+                    saveCursor(PHASE1_CURSOR_KEY, nextPhase1Page);
+                    log.info("Phase 1 — page {} done ({} projects), next page: {}", phase1Page, projects.size(), nextPhase1Page);
+                }
+            } else {
+                // Empty catalogue or past the last page — reset cursor to 0
+                saveCursor(PHASE1_CURSOR_KEY, 0);
+                log.info("Phase 1 — catalogue empty or end of pages at page {}, cursor reset to 0", phase1Page);
+            }
 
             // Phase 2 — Discover new projects using paginated category queries
             for (DiscoveryQuery dq : props.getQueries()) {
