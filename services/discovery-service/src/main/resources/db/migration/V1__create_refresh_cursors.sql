@@ -1,0 +1,5 @@
+CREATE TABLE refresh_cursors (
+    query_name  VARCHAR(500) PRIMARY KEY,
+    last_page   INTEGER NOT NULL DEFAULT 1,
+    updated_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

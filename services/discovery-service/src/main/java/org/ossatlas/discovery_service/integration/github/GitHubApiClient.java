@@ -25,13 +25,14 @@ public class GitHubApiClient {
         this.restClient = builder.build();
     }
 
-    public GhSearchResponse search(String query, int perPage) {
+    public GhSearchResponse search(String query, int perPage, int page) {
         return restClient.get()
                 .uri(ub -> ub.path("/search/repositories")
                         .queryParam("q", query)
                         .queryParam("sort", "stars")
                         .queryParam("order", "desc")
                         .queryParam("per_page", perPage)
+                        .queryParam("page", page)
                         .build())
                 .retrieve()
                 .body(GhSearchResponse.class);

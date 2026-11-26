@@ -38,7 +38,7 @@ class CatalogueImportTest {
 
     @Test
     void search_doesNotAutoImportToCatalogue() {
-        given(gitHubApiClient.search(anyString(), anyInt())).willReturn(oneRepo());
+        given(gitHubApiClient.search(anyString(), anyInt(), anyInt())).willReturn(oneRepo());
 
         service.search(new SearchRequest("java tools", null, null, null, null, null));
 
@@ -48,7 +48,7 @@ class CatalogueImportTest {
 
     @Test
     void search_returnsProjects_withoutImportResult() {
-        given(gitHubApiClient.search(anyString(), anyInt())).willReturn(oneRepo());
+        given(gitHubApiClient.search(anyString(), anyInt(), anyInt())).willReturn(oneRepo());
 
         SearchResponse resp = service.search(new SearchRequest("java tools", null, null, null, null, null));
 

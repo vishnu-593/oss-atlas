@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 public class SearchServiceImpl implements SearchService {
 
     static final int DEFAULT_LIMIT = 10;
-    static final int MAX_LIMIT = 50;
+    static final int MAX_LIMIT = 100;
 
     private final GitHubApiClient gitHubApiClient;
 
@@ -32,7 +32,7 @@ public class SearchServiceImpl implements SearchService {
                 : DEFAULT_LIMIT;
 
         String githubQuery = buildQuery(request);
-        GhSearchResponse ghResponse = gitHubApiClient.search(githubQuery, limit);
+        GhSearchResponse ghResponse = gitHubApiClient.search(githubQuery, limit, 1);
 
         List<DiscoveryProject> projects = deduplicate(
                 ghResponse.items().stream().map(this::toProject).toList()

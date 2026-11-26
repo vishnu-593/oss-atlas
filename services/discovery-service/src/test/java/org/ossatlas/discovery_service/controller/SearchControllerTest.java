@@ -93,7 +93,7 @@ class SearchControllerTest {
         mockMvc.perform(post("/api/discovery/search")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"query":"test","limit":51}
+                                {"query":"test","limit":101}
                                 """))
                 .andExpect(status().isBadRequest());
     }
