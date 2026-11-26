@@ -10,8 +10,8 @@ public class GitHubApiClient {
     private final RestClient restClient;
 
     public GitHubApiClient(
-            @Value("${github.api.base-url}") String baseUrl,
-            @Value("${github.api.token}")    String token) {
+            @Value("${oss-atlas.github.base-url}") String baseUrl,
+            @Value("${oss-atlas.github.token}")    String token) {
 
         RestClient.Builder builder = RestClient.builder()
                 .baseUrl(baseUrl)

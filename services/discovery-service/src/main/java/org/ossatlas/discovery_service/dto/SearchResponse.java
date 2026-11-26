@@ -5,6 +5,5 @@ import java.util.List;
 public record SearchResponse(
         String query,
         int totalFound,
-        List<DiscoveryProject> projects,
-        ImportResult importResult
+        List<DiscoveryProject> projects
 ) {}

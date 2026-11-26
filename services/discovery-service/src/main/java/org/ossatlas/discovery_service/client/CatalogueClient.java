@@ -20,7 +20,7 @@ public class CatalogueClient {
 
     private final RestClient restClient;
 
-    public CatalogueClient(@Value("${catalogue.service.base-url}") String baseUrl) {
+    public CatalogueClient(@Value("${oss-atlas.catalogue.base-url}") String baseUrl) {
         this.restClient = RestClient.builder().baseUrl(baseUrl).build();
     }
 
