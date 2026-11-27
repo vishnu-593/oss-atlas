@@ -69,6 +69,18 @@
   background: var(--accent-subtle);
 }
 
+.btn-bookmark--on {
+  border-color: #f59e0b;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.btn-bookmark--on:hover {
+  border-color: #f59e0b;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.18);
+}
+
 .details-desc {
   font-size: 1rem;
   color: var(--text-secondary);

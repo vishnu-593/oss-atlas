@@ -1,7 +1,10 @@
 import { Link, NavLink } from 'react-router-dom'
+import { useBookmarks } from '../hooks/useBookmarks'
 import './Navbar.css'
 
 export function Navbar() {
+  const { bookmarks } = useBookmarks()
+
   return (
     <header className="navbar">
       <div className="navbar-inner">
@@ -35,6 +38,12 @@ export function Navbar() {
           </NavLink>
           <NavLink to="/discover" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
             Discover
+          </NavLink>
+          <NavLink to="/bookmarks" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+            Bookmarks
+            {bookmarks.length > 0 && (
+              <span className="nav-badge">{bookmarks.length}</span>
+            )}
           </NavLink>
         </nav>
 

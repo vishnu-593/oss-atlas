@@ -12,20 +12,37 @@ interface Props {
   badge?: 'indexed' | 'discovered'
   compareSelected?: boolean
   onToggleCompare?: (project: Project) => void
+  bookmarked?: boolean
+  onToggleBookmark?: (project: Project) => void
 }
 
-export function ProjectCard({ project, badge, compareSelected, onToggleCompare }: Props) {
+export function ProjectCard({ project, badge, compareSelected, onToggleCompare, bookmarked, onToggleBookmark }: Props) {
   const isExternal = String(project.id).startsWith('http')
 
   const inner = (
     <>
       <div className="card-header">
         <span className="card-name">{project.name}</span>
-        {badge && (
-          <span className={`card-badge badge-${badge}`}>
-            {badge === 'indexed' ? 'Indexed' : 'Discovered'}
-          </span>
-        )}
+        <div className="card-header-actions">
+          {onToggleBookmark && (
+            <button
+              className={`card-bookmark${bookmarked ? ' card-bookmark--on' : ''}`}
+              onClick={e => { e.preventDefault(); e.stopPropagation(); onToggleBookmark(project) }}
+              title={bookmarked ? 'Remove bookmark' : 'Bookmark this project'}
+              aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark this project'}
+            >
+              <svg viewBox="0 0 12 15" fill={bookmarked ? 'currentColor' : 'none'} aria-hidden="true">
+                <path d="M2 1.5h8a.5.5 0 01.5.5v11l-4.5-2.8L1.5 13V2a.5.5 0 01.5-.5z"
+                  stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          )}
+          {badge && (
+            <span className={`card-badge badge-${badge}`}>
+              {badge === 'indexed' ? 'Indexed' : 'Discovered'}
+            </span>
+          )}
+        </div>
       </div>
       <p className="card-desc">{project.description}</p>
       <div className="card-meta">

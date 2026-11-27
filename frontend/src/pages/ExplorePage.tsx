@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import type { ProjectFilters, Project } from '../types/project'
 import { useProjects } from '../hooks/useProjects'
+import { useBookmarks } from '../hooks/useBookmarks'
 import { ProjectCard } from '../components/ProjectCard'
 import { FilterPanel } from '../components/FilterPanel'
 import { Pagination } from '../components/Pagination'
@@ -19,6 +20,7 @@ export function ExplorePage() {
   })
   const [page, setPage] = useState(0)
   const { data, loading, error, reload } = useProjects(filters, page)
+  const { toggle: toggleBookmark, isBookmarked } = useBookmarks()
   const [compareMap, setCompareMap] = useState<Map<string, Project>>(new Map())
 
   useEffect(() => {
@@ -87,6 +89,8 @@ export function ExplorePage() {
                     <ProjectCard
                       key={p.id}
                       project={p}
+                      bookmarked={isBookmarked(p.id)}
+                      onToggleBookmark={toggleBookmark}
                       compareSelected={compareMap.has(p.id)}
                       onToggleCompare={handleToggleCompare}
                     />

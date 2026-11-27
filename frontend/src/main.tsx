@@ -6,6 +6,7 @@ import { HomePage } from './pages/HomePage'
 import { ExplorePage } from './pages/ExplorePage'
 import { ProjectDetailsPage } from './pages/ProjectDetailsPage'
 import { DiscoveryPage } from './pages/DiscoveryPage'
+import { BookmarksPage } from './pages/BookmarksPage'
 import './index.css'
 
 const router = createBrowserRouter([
@@ -17,6 +18,7 @@ const router = createBrowserRouter([
       { path: 'explore', element: <ExplorePage /> },
       { path: 'projects/:id', element: <ProjectDetailsPage /> },
       { path: 'discover', element: <DiscoveryPage /> },
+      { path: 'bookmarks', element: <BookmarksPage /> },
     ],
   },
 ])

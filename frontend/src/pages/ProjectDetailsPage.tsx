@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import type { Project } from '../types/project'
 import { getProjectById, getProjectReadme, getProjects } from '../services/catalogueService'
+import { useBookmarks } from '../hooks/useBookmarks'
 import { LoadingState } from '../components/LoadingState'
 import { ErrorState } from '../components/ErrorState'
 import { ProjectCard } from '../components/ProjectCard'
@@ -19,6 +20,7 @@ export function ProjectDetailsPage() {
   const [similar, setSimilar] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { toggle: toggleBookmark, isBookmarked } = useBookmarks()
 
   useEffect(() => {
     if (!id) return
@@ -55,6 +57,12 @@ export function ProjectDetailsPage() {
             <p className="details-owner">by {project.owner}</p>
           </div>
           <div className="details-actions">
+            <button
+              className={`btn-outline btn-bookmark${project && isBookmarked(project.id) ? ' btn-bookmark--on' : ''}`}
+              onClick={() => project && toggleBookmark(project)}
+            >
+              {project && isBookmarked(project.id) ? '★ Bookmarked' : '☆ Bookmark'}
+            </button>
             <a href={project.githubUrl} target="_blank" rel="noreferrer" className="btn-outline">
               View on GitHub ↗
             </a>
@@ -118,7 +126,14 @@ export function ProjectDetailsPage() {
           <div className="similar-section">
             <h3 className="similar-title">Similar Projects</h3>
             <div className="similar-grid">
-              {similar.map(s => <ProjectCard key={s.id} project={s} />)}
+              {similar.map(s => (
+                <ProjectCard
+                  key={s.id}
+                  project={s}
+                  bookmarked={isBookmarked(s.id)}
+                  onToggleBookmark={toggleBookmark}
+                />
+              ))}
             </div>
           </div>
         )}
