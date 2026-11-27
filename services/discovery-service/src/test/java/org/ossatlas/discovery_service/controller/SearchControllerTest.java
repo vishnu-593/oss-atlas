@@ -13,6 +13,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import org.ossatlas.discovery_service.refresh.RefreshJob;
+
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -25,13 +27,14 @@ class SearchControllerTest {
 
     @Mock SearchService searchService;
     @Mock CatalogueClient catalogueClient;
+    @Mock RefreshJob refreshJob;
 
     MockMvc mockMvc;
 
     @BeforeEach
     void setup() {
         mockMvc = MockMvcBuilders
-                .standaloneSetup(new DiscoveryController(searchService, catalogueClient))
+                .standaloneSetup(new DiscoveryController(searchService, catalogueClient, refreshJob))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
