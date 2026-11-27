@@ -41,8 +41,21 @@
   text-transform: uppercase;
 }
 
+.card-badges {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
 .badge-indexed    { background: var(--success-subtle); color: var(--accent-text); }
 .badge-discovered { background: var(--warn-subtle); color: #e3b341; }
+
+/* Health status badges */
+.badge-health-active   { background: #1a4731; color: #4ade80; }
+.badge-health-healthy  { background: #1c3a1a; color: #86efac; }
+.badge-health-slow     { background: #3d2a05; color: #fbbf24; }
+.badge-health-inactive { background: #2d1a1a; color: #f87171; }
 
 .card-desc {
   font-size: 0.82rem;
