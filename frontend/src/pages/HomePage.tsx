@@ -150,10 +150,6 @@ export function HomePage() {
             />
             <button type="submit" className="hero-search-btn">Search</button>
           </form>
-          <div className="hero-links">
-            <Link to="/explore" className="hero-link">Browse catalogue →</Link>
-            <Link to="/discover" className="hero-link">GitHub discovery →</Link>
-          </div>
         </div>
         <HeroDiagram />
       </section>

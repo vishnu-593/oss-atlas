@@ -1,0 +1,339 @@
+.cmp-page {
+  min-height: 100vh;
+  padding: 2rem 1.75rem 6rem;
+}
+
+.cmp-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Top bar */
+.cmp-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cmp-back {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.838rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s;
+}
+.cmp-back:hover { color: var(--accent-text); }
+
+.cmp-restart {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.775rem;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s;
+}
+.cmp-restart:hover { color: #f87171; }
+
+/* Title */
+.cmp-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.025em;
+  margin: 0 0 0.3rem;
+}
+
+.cmp-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Table */
+.cmp-table-wrap {
+  overflow-x: auto;
+}
+
+.cmp-table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 540px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.cmp-th-label {
+  width: 190px;
+  min-width: 150px;
+  border-right: 1px solid var(--border);
+}
+
+.cmp-th {
+  min-width: 210px;
+  padding: 1.25rem 1.5rem;
+  text-align: left;
+  vertical-align: top;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.cmp-th:last-child { border-right: none; }
+
+.cmp-col-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.cmp-col-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.015em;
+}
+
+.cmp-col-owner {
+  font-size: 0.775rem;
+  color: var(--text-secondary);
+}
+
+.cmp-status-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.2rem;
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid;
+  width: fit-content;
+}
+
+/* Row label */
+.cmp-row-label {
+  padding: 1rem 1.25rem;
+  border-right: 1px solid var(--border);
+  vertical-align: top;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.cmp-label-title {
+  display: block;
+  font-size: 0.838rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.cmp-label-sub {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+/* Cells */
+.cmp-cell {
+  padding: 1rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  vertical-align: top;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background 0.15s;
+}
+.cmp-cell:last-child { border-right: none; }
+
+.cmp-cell--highlight {
+  background: color-mix(in srgb, #22c55e 8%, transparent);
+}
+
+tr:last-child .cmp-cell,
+tr:last-child .cmp-row-label {
+  border-bottom: none;
+}
+
+/* Win tag */
+.cmp-win-tag {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.5rem;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  padding: 0.13rem 0.4rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, #22c55e 15%, transparent);
+  color: #22c55e;
+  border: 1px solid color-mix(in srgb, #22c55e 30%, transparent);
+  vertical-align: middle;
+}
+
+/* Health score bar */
+.cmp-score-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin-bottom: 0.55rem;
+}
+
+.cmp-score-num {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.cmp-bar-track {
+  height: 4px;
+  background: var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+  max-width: 160px;
+}
+
+.cmp-bar-fill {
+  height: 100%;
+  background: #22c55e;
+  border-radius: 999px;
+}
+
+/* Topics */
+.cmp-topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.cmp-topic-chip {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  background: var(--bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  color: var(--text-muted);
+}
+
+/* GitHub link */
+.cmp-gh-link {
+  font-size: 0.838rem;
+  font-weight: 500;
+  color: var(--accent-text);
+  text-decoration: none;
+}
+.cmp-gh-link:hover { text-decoration: underline; }
+
+/* Empty state */
+.cmp-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  min-height: 50vh;
+  color: var(--text-muted);
+}
+
+.cmp-link {
+  background: none;
+  border: none;
+  color: var(--accent-text);
+  font-size: 0.875rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* Footer compare bar */
+.cmp-footer-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.25);
+  z-index: 100;
+  padding: 0.6rem 1.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.cmp-footer-label {
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.cmp-footer-chips {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  overflow: hidden;
+}
+
+.cmp-footer-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.775rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.22rem 0.35rem 0.22rem 0.6rem;
+  white-space: nowrap;
+}
+
+.cmp-footer-remove {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0 0.1rem;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+.cmp-footer-remove:hover { color: #f87171; }
+
+.cmp-footer-clear {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.775rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.3rem 0.5rem;
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+.cmp-footer-clear:hover { color: var(--text-secondary); }
+
+.cmp-footer-count {
+  font-size: 0.775rem;
+  font-weight: 600;
+  color: var(--accent-text);
+  flex-shrink: 0;
+  padding: 0.3rem 0.6rem;
+  background: var(--accent-subtle);
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  border-radius: var(--radius-sm);
+}

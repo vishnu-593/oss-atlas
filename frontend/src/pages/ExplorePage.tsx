@@ -10,7 +10,7 @@ import { LoadingState } from '../components/LoadingState'
 import { ErrorState } from '../components/ErrorState'
 import { EmptyState } from '../components/EmptyState'
 import { StatsPanel } from '../components/StatsPanel'
-import { ComparisonDrawer } from '../components/ComparisonDrawer'
+import { CompareBar } from '../components/CompareBar'
 import './ExplorePage.css'
 
 export function ExplorePage() {
@@ -103,7 +103,7 @@ export function ExplorePage() {
         </div>
       </div>
 
-      <ComparisonDrawer
+      <CompareBar
         projects={compareProjects}
         onRemove={id => setCompareMap(prev => { const m = new Map(prev); m.delete(id); return m })}
         onClear={() => setCompareMap(new Map())}

@@ -7,6 +7,7 @@ import { ExplorePage } from './pages/ExplorePage'
 import { ProjectDetailsPage } from './pages/ProjectDetailsPage'
 import { DiscoveryPage } from './pages/DiscoveryPage'
 import { BookmarksPage } from './pages/BookmarksPage'
+import { ComparePage } from './pages/ComparePage'
 import './index.css'
 
 const router = createBrowserRouter([
@@ -19,6 +20,7 @@ const router = createBrowserRouter([
       { path: 'projects/:id', element: <ProjectDetailsPage /> },
       { path: 'discover', element: <DiscoveryPage /> },
       { path: 'bookmarks', element: <BookmarksPage /> },
+      { path: 'compare', element: <ComparePage /> },
     ],
   },
 ])
