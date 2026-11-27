@@ -7,6 +7,24 @@ function fmt(n: number): string {
   return String(n)
 }
 
+type HealthStatus = 'active' | 'healthy' | 'slow' | 'inactive'
+
+function getHealthStatus(lastUpdated: string): HealthStatus | null {
+  if (!lastUpdated) return null
+  const months = (Date.now() - new Date(lastUpdated).getTime()) / (1000 * 60 * 60 * 24 * 30)
+  if (months <= 3)  return 'active'
+  if (months <= 12) return 'healthy'
+  if (months <= 24) return 'slow'
+  return 'inactive'
+}
+
+const HEALTH_LABEL: Record<HealthStatus, string> = {
+  active:   'Active',
+  healthy:  'Healthy',
+  slow:     'Slow',
+  inactive: 'Inactive',
+}
+
 interface Props {
   project: Project
   badge?: 'indexed' | 'discovered'
@@ -14,16 +32,24 @@ interface Props {
 
 export function ProjectCard({ project, badge }: Props) {
   const isExternal = String(project.id).startsWith('http')
+  const health = getHealthStatus(project.lastUpdated)
 
   const inner = (
     <>
       <div className="card-header">
         <span className="card-name">{project.name}</span>
-        {badge && (
-          <span className={`card-badge badge-${badge}`}>
-            {badge === 'indexed' ? 'Indexed' : 'Discovered'}
-          </span>
-        )}
+        <div className="card-badges">
+          {health && (
+            <span className={`card-badge badge-health badge-health-${health}`}>
+              {HEALTH_LABEL[health]}
+            </span>
+          )}
+          {badge && (
+            <span className={`card-badge badge-${badge}`}>
+              {badge === 'indexed' ? 'Indexed' : 'Discovered'}
+            </span>
+          )}
+        </div>
       </div>
       <p className="card-desc">{project.description}</p>
       <div className="card-meta">
