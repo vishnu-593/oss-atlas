@@ -59,12 +59,12 @@ export async function getProjects(
     url = `${API_URLS.CATALOGUE_BASE}/api/projects?${params}`
   }
 
-  const raw = await fetchJson<PagedResponse<RawProject>>(url)
+  const raw = await fetchJson<PagedResponse<RawProject> & { number: number }>(url)
   return {
     content: raw.content.map(toProject),
     totalElements: raw.totalElements,
     totalPages: raw.totalPages,
-    page: raw.page,
+    page: raw.number ?? 0,
     size: raw.size,
   }
 }
@@ -78,7 +78,8 @@ export async function getCatalogueStats(): Promise<CatalogueStats> {
   return fetchJson<CatalogueStats>(`${API_URLS.CATALOGUE_BASE}/api/projects/stats`)
 }
 
-export async function getProjectReadme(id: string): Promise<string | null> {  try {
+export async function getProjectReadme(id: string): Promise<string | null> {
+  try {
     const res = await fetch(`${API_URLS.CATALOGUE_BASE}/api/projects/${id}/readme`, {
       signal: AbortSignal.timeout(5000),
     })

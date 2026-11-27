@@ -121,6 +121,7 @@ export function DiscoveryPage() {
 
       {loading && <LoadingState message="Searching GitHub…" />}
       {error && !loading && <ErrorState message={error} />}
+      {importError && <div className="import-error">{importError}</div>}
 
       {result && !loading && (
         <div className="discovery-results">
