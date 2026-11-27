@@ -1,0 +1,29 @@
+{
+  "name": "OSS Atlas Dev Container",
+  "image": "mcr.microsoft.com/devcontainers/java:21-bullseye",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "postCreateCommand": "cd frontend && npm install",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "vmware.vscode-spring-boot",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  },
+  "forwardPorts": [3000, 8081, 8082, 8083],
+  "portsAttributes": {
+    "3000": { "label": "Frontend (Vite)" },
+    "8081": { "label": "Catalogue Service" },
+    "8082": { "label": "Discovery Service" },
+    "8083": { "label": "Source Integration Service" }
+  }
+}

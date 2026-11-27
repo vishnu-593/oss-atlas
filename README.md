@@ -36,6 +36,14 @@ oss-atlas/
 ├── infrastructure/
 │   └── docker/
 ├── docs/
+├── changelog/
+├── signatures/
+├── CHANGELOG.md
+├── CONTRIBUTING.md
+├── GOVERNANCE.md
+├── ROADMAP.md
+├── SECURITY.md
+├── CODE_OF_CONDUCT.md
 ├── LICENSE
 └── README.md
 ```
@@ -80,7 +88,9 @@ OSS Atlas is currently under active development.
 
 ## Contributing
 
-Contributions, ideas and feedback are welcome. Please open an issue or pull request before making significant changes.
+Contributions, ideas and feedback are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions, code style, and the PR process. See [ROADMAP.md](ROADMAP.md) for planned work and [GOVERNANCE.md](GOVERNANCE.md) for how the project is run.
+
+Please report security vulnerabilities privately — see [SECURITY.md](SECURITY.md).
 
 ## License
 
