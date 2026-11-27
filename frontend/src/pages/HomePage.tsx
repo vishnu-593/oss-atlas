@@ -97,14 +97,11 @@ function HeroDiagram() {
             <span>{'}'}</span>
           </div>
           <div className="code-line mt cursor-line">
-            <span className="cl-comment">// 9 projects indexed</span>
+            <span className="cl-comment">// live open-source catalogue</span>
             <span className="cursor" />
           </div>
         </div>
       </div>
-      <div className="diagram-pill pill-1">MIT Licensed</div>
-      <div className="diagram-pill pill-2">229k ★</div>
-      <div className="diagram-pill pill-3">JavaScript</div>
     </div>
   )
 }
@@ -151,8 +148,7 @@ export function HomePage() {
             <button type="submit" className="hero-search-btn">Search</button>
           </form>
           <div className="hero-links">
-            <Link to="/explore" className="hero-link">Browse catalogue →</Link>
-            <Link to="/discover" className="hero-link">GitHub discovery →</Link>
+            <Link to="/discover" className="hero-link">Or discover new repos on GitHub →</Link>
           </div>
         </div>
         <HeroDiagram />
@@ -176,10 +172,9 @@ export function HomePage() {
       <section className="cta-section">
         <div className="cta-inner">
           <h2>Start exploring now</h2>
-          <p>9 projects indexed. More coming as backend services go live.</p>
+          <p>Hundreds of open-source projects indexed, with live GitHub discovery.</p>
           <div className="cta-actions">
             <Link to="/explore" className="btn btn-primary">Browse Catalogue</Link>
-            <Link to="/discover" className="btn btn-secondary">Discover Projects</Link>
           </div>
         </div>
       </section>
