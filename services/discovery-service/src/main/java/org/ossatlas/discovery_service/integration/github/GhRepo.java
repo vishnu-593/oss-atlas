@@ -17,5 +17,6 @@ public record GhRepo(
         @JsonProperty("forks_count")      int forks,
         List<String> topics,
         @JsonProperty("updated_at")       Instant updatedAt,
-        GhLicense license
+        GhLicense license,
+        @JsonProperty("open_issues_count") int openIssues
 ) {}

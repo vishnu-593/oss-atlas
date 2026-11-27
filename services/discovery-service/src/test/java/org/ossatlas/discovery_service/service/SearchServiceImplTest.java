@@ -35,12 +35,12 @@ class SearchServiceImplTest {
         return new GhRepo(name, "desc for " + name, url,
                 new GhOwner("owner"), language, stars, 10,
                 List.of("tag1"), Instant.parse("2026-11-20T10:00:00Z"),
-                new GhLicense("MIT", "MIT License"));
+                new GhLicense("MIT", "MIT License"), 5);
     }
 
     private static GhRepo repoMinimal(String name, String url) {
         return new GhRepo(name, null, url, null, null, 0, 0, null,
-                null, null);
+                null, null, 0);
     }
 
     private static GhSearchResponse response(GhRepo... repos) {

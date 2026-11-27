@@ -13,5 +13,6 @@ public record CatalogueImportItem(
         Integer stars,
         Integer forks,
         List<String> topics,
-        Instant lastUpdated
+        Instant lastUpdated,
+        Integer openIssues
 ) {}

@@ -32,7 +32,7 @@ class CatalogueImportTest {
         GhRepo repo = new GhRepo("my-lib", "desc", "https://github.com/o/my-lib",
                 new GhOwner("o"), "Java", 500, 50,
                 List.of("java"), Instant.parse("2026-11-01T00:00:00Z"),
-                new GhLicense("MIT", "MIT License"));
+                new GhLicense("MIT", "MIT License"), 3);
         return new GhSearchResponse(1, List.of(repo));
     }
 

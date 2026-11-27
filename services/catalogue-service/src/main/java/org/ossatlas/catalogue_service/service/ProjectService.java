@@ -118,19 +118,23 @@ public class ProjectService {
                 request.topics() == null ? List.of() : request.topics()
         );
         project.setLastUpdated(request.lastUpdated());
+        project.setOpenIssues(request.openIssues() != null ? request.openIssues() : 0);
+        project.setHealthScore(HealthScoreCalculator.compute(project));
     }
 
     private ProjectRequest normalizeRequest(ProjectRequest request, String normalizedUrl) {
         return new ProjectRequest(
                 request.name(), request.description(), normalizedUrl,
                 request.owner(), request.language(), request.license(),
-                request.stars(), request.forks(), request.topics(), request.lastUpdated()
+                request.stars(), request.forks(), request.topics(),
+                request.lastUpdated(), request.openIssues()
         );
     }
 
     // Map entity to response DTO
     private ProjectResponse mapToResponse(Project project) {
 
+        int score = project.getHealthScore() != null ? project.getHealthScore() : 0;
         return new ProjectResponse(
                 project.getId(),
                 project.getName(),
@@ -144,7 +148,10 @@ public class ProjectService {
                 project.getTopics(),
                 project.getLastUpdated(),
                 project.getCreatedAt(),
-                project.getUpdatedAt()
+                project.getUpdatedAt(),
+                project.getOpenIssues(),
+                score,
+                HealthScoreCalculator.label(score)
         );
     }
 
@@ -189,7 +196,8 @@ public class ProjectService {
                 projectRequest.stars(),
                 projectRequest.forks(),
                 projectRequest.topics(),
-                projectRequest.lastUpdated()
+                projectRequest.lastUpdated(),
+                projectRequest.openIssues()
         );
 
         updateProjectFields(project, normalizedRequest);

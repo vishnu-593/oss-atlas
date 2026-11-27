@@ -61,12 +61,12 @@ class RefreshJobTest {
 
     private static GhRepo ghRepo(String name) {
         return new GhRepo(name, "desc", "https://github.com/o/" + name,
-                new GhOwner("o"), "Java", 100, 10, List.of(), Instant.now(), null);
+                new GhOwner("o"), "Java", 100, 10, List.of(), Instant.now(), null, 0);
     }
 
     private static DiscoveryProject discoveryProject(String name) {
         return new DiscoveryProject(name, "desc", "https://github.com/o/" + name,
-                "o", "Java", "MIT", 100, 10, List.of(), Instant.now());
+                "o", "Java", "MIT", 100, 10, List.of(), Instant.now(), 0, 68, "Active");
     }
 
     // ---- 3. Successful scheduled refresh ----
