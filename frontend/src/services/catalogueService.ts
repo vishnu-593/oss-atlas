@@ -1,38 +1,124 @@
 import type { Project, ProjectFilters, PagedResponse } from '../types/project'
 import { fetchJson, API_URLS } from './apiClient'
 
+/**
+ * Accepts both the current API shape (githubUrl/topics/forks) and the older
+ * one still deployed (repositoryUrl/tags), so cards render either way.
+ */
 interface RawProject {
   id: number | string
   name?: string
   description?: string
   githubUrl?: string
+  repositoryUrl?: string
   owner?: string
   language?: string
   license?: string
   stars?: number
   forks?: number
   topics?: string[] | null
+  tags?: string[] | null
   lastUpdated?: string
+  updatedAt?: string
   category?: string
   homepage?: string
 }
 
+function ownerFromUrl(url: string): string {
+  const m = url.match(/github\.com\/([^/]+)/i)
+  return m ? m[1] : ''
+}
+
 function toProject(p: RawProject): Project {
+  const githubUrl = p.githubUrl ?? p.repositoryUrl ?? ''
   return {
     id: String(p.id),
     name: p.name ?? '',
     description: p.description ?? '',
-    githubUrl: p.githubUrl ?? '',
-    owner: p.owner ?? '',
+    githubUrl,
+    owner: p.owner ?? ownerFromUrl(githubUrl),
     language: p.language ?? '',
     license: (p.license as Project['license']) ?? 'Other',
     stars: p.stars ?? 0,
     forks: p.forks ?? 0,
-    topics: p.topics ?? [],
-    lastUpdated: p.lastUpdated ?? '',
+    topics: p.topics ?? p.tags ?? [],
+    lastUpdated: p.lastUpdated ?? p.updatedAt ?? '',
     category: p.category as Project['category'] | undefined,
     homepage: p.homepage,
   }
+}
+
+function applyFilters(projects: Project[], filters: Partial<ProjectFilters>): Project[] {
+  return projects.filter(p => {
+    if (filters.search) {
+      const q = filters.search.toLowerCase()
+      const hit =
+        p.name.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q) ||
+        p.language.toLowerCase().includes(q) ||
+        p.topics.some(t => t.toLowerCase().includes(q))
+      if (!hit) return false
+    }
+    if (filters.language && p.language.toLowerCase() !== filters.language.toLowerCase()) return false
+    if (filters.license && p.license !== filters.license) return false
+    if (filters.topic) {
+      const t = filters.topic.toLowerCase()
+      if (!p.topics.some(tag => tag.toLowerCase().includes(t))) return false
+    }
+    return true
+  })
+}
+
+function paginate(projects: Project[], page: number, size: number): PagedResponse<Project> {
+  const start = page * size
+  return {
+    content: projects.slice(start, start + size),
+    totalElements: projects.length,
+    totalPages: Math.max(1, Math.ceil(projects.length / size)),
+    page,
+    size,
+  }
+}
+
+function mapPage(raw: PagedResponse<RawProject>, page: number, size: number): PagedResponse<Project> {
+  return {
+    content: (raw.content ?? []).map(toProject),
+    totalElements: raw.totalElements,
+    totalPages: raw.totalPages,
+    page: raw.page ?? page,
+    size: raw.size ?? size,
+  }
+}
+
+/**
+ * Full-catalogue fallback: the list endpoint ignores filter params and the
+ * server-side /search currently 400s, so when the server path fails we pull
+ * everything once (cached briefly) and filter in the browser.
+ */
+let cache: { at: number; data: Project[] } | null = null
+const CACHE_TTL_MS = 15_000
+
+async function fetchAllProjects(): Promise<Project[]> {
+  if (cache && Date.now() - cache.at < CACHE_TTL_MS) return cache.data
+  const size = 100
+  const first = await fetchJson<PagedResponse<RawProject>>(
+    `${API_URLS.CATALOGUE_BASE}/api/projects?page=0&size=${size}`,
+  )
+  const raw = [...first.content]
+  const totalPages = Math.min(first.totalPages ?? 1, 20)
+  if (totalPages > 1) {
+    const rest = await Promise.all(
+      Array.from({ length: totalPages - 1 }, (_, i) =>
+        fetchJson<PagedResponse<RawProject>>(
+          `${API_URLS.CATALOGUE_BASE}/api/projects?page=${i + 1}&size=${size}`,
+        ),
+      ),
+    )
+    rest.forEach(r => raw.push(...r.content))
+  }
+  const data = raw.map(toProject)
+  cache = { at: Date.now(), data }
+  return data
 }
 
 export async function getProjects(
@@ -40,32 +126,42 @@ export async function getProjects(
   page = 0,
   size = 12,
 ): Promise<PagedResponse<Project>> {
-  const hasFilters = filters.search || filters.language || filters.license || filters.topic
+  const hasFilters = !!(filters.search || filters.language || filters.license || filters.topic)
 
-  const params = new URLSearchParams()
-  params.set('page', String(page))
-  params.set('size', String(size))
-
-  let url: string
   if (hasFilters) {
-    if (filters.search)   params.set('keyword', filters.search)
-    if (filters.language) params.set('language', filters.language)
-    if (filters.license)  params.set('license', filters.license)
-    if (filters.topic)    params.set('topic', filters.topic)
-    url = `${API_URLS.CATALOGUE_BASE}/api/projects/search?${params}`
-  } else {
-    params.set('sortBy', 'createdAt')
-    params.set('direction', 'desc')
-    url = `${API_URLS.CATALOGUE_BASE}/api/projects?${params}`
+    // Prefer server-side search (works once the backend ships it); if that
+    // endpoint fails, filter the full catalogue client-side instead.
+    try {
+      const params = new URLSearchParams({ page: String(page), size: String(size) })
+      if (filters.search) params.set('keyword', filters.search)
+      if (filters.language) params.set('language', filters.language)
+      if (filters.license) params.set('license', filters.license)
+      if (filters.topic) params.set('topic', filters.topic)
+      const raw = await fetchJson<PagedResponse<RawProject>>(
+        `${API_URLS.CATALOGUE_BASE}/api/projects/search?${params}`,
+      )
+      return mapPage(raw, page, size)
+    } catch {
+      const all = await fetchAllProjects()
+      return paginate(applyFilters(all, filters), page, size)
+    }
   }
 
-  const raw = await fetchJson<PagedResponse<RawProject>>(url)
-  return {
-    content: raw.content.map(toProject),
-    totalElements: raw.totalElements,
-    totalPages: raw.totalPages,
-    page: raw.page,
-    size: raw.size,
+  // No filters: plain listing, with the same client-side fallback.
+  try {
+    const params = new URLSearchParams({
+      page: String(page),
+      size: String(size),
+      sortBy: 'createdAt',
+      direction: 'desc',
+    })
+    const raw = await fetchJson<PagedResponse<RawProject>>(
+      `${API_URLS.CATALOGUE_BASE}/api/projects?${params}`,
+    )
+    return mapPage(raw, page, size)
+  } catch {
+    const all = await fetchAllProjects()
+    return paginate(all, page, size)
   }
 }
 
