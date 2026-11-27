@@ -57,7 +57,10 @@ class DiscoveryControllerTest {
                                     "stars": 75000,
                                     "forks": 40000,
                                     "topics": ["java","spring"],
-                                    "lastUpdated": "2026-11-01T00:00:00Z"
+                                    "lastUpdated": "2026-11-01T00:00:00Z",
+                                    "openIssues": 120,
+                                    "healthScore": 85,
+                                    "healthLabel": "Healthy"
                                   }]
                                 }
                                 """))
