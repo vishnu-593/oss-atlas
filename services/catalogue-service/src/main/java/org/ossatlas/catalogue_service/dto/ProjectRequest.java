@@ -39,6 +39,9 @@ public record ProjectRequest(
 
         List<String> topics,
 
-        Instant lastUpdated
+        Instant lastUpdated,
+
+        @Min(0)
+        Integer openIssues
 
 ) {}

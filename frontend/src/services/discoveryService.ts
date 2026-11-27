@@ -13,6 +13,9 @@ interface BackendProject {
   forks: number
   topics: string[] | null
   lastUpdated: string
+  openIssues: number
+  healthScore: number
+  healthLabel: string
 }
 
 interface BackendSearchResponse {
@@ -42,6 +45,9 @@ function toProject(p: BackendProject, index: number): Project {
     forks: p.forks ?? 0,
     topics: p.topics ?? [],
     lastUpdated: p.lastUpdated ?? '',
+    openIssues: p.openIssues ?? 0,
+    healthScore: p.healthScore,
+    healthLabel: p.healthLabel,
   }
 }
 
@@ -88,6 +94,9 @@ export async function importProjects(projects: Project[]): Promise<ImportResult>
       forks: p.forks,
       topics: p.topics,
       lastUpdated: p.lastUpdated || new Date().toISOString(),
+      openIssues: p.openIssues ?? 0,
+      healthScore: p.healthScore ?? 0,
+      healthLabel: p.healthLabel ?? 'Active',
     })),
   }
   const res = await fetch(`${API_URLS.DISCOVERY_BASE}/api/discovery/import`, {

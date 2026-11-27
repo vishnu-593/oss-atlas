@@ -1,0 +1,135 @@
+.compare-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.1);
+  padding: 0.75rem 1.5rem;
+  animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.compare-bar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.compare-bar-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.compare-bar-chips {
+  display: flex;
+  gap: 0.5rem;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.compare-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.6rem;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  min-width: 110px;
+}
+
+.compare-chip-empty {
+  opacity: 0.4;
+  border-style: dashed;
+  background: transparent;
+}
+
+.compare-chip-empty span {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.compare-chip-name {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 120px;
+}
+
+.compare-chip-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0 0.1rem;
+  border-radius: 3px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.compare-chip-remove:hover {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+
+.compare-bar-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-left: auto;
+}
+
+.compare-clear-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.9rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.compare-clear-btn:hover {
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+.compare-go-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 1.1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.compare-go-btn:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.compare-go-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

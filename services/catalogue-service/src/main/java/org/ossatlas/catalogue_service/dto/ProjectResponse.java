@@ -18,5 +18,8 @@ public record ProjectResponse(
         List<String> topics,
         Instant lastUpdated,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        Integer openIssues,
+        Integer healthScore,
+        String healthLabel
 ) {}

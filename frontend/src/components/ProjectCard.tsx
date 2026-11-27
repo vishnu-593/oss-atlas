@@ -1,10 +1,22 @@
 import { Link } from 'react-router-dom'
 import type { Project } from '../types/project'
+import { useCompare } from '../context/CompareContext'
 import './ProjectCard.css'
 
 function fmt(n: number): string {
   if (n >= 1000) return `${(n / 1000).toFixed(1)}k`
   return String(n)
+}
+
+function healthClass(label?: string): string {
+  switch (label) {
+    case 'Healthy':      return 'health-healthy'
+    case 'Active':       return 'health-active'
+    case 'Moderate':     return 'health-moderate'
+    case 'Low Activity': return 'health-low'
+    case 'Inactive':     return 'health-inactive'
+    default:             return ''
+  }
 }
 
 interface Props {
@@ -13,17 +25,26 @@ interface Props {
 }
 
 export function ProjectCard({ project, badge }: Props) {
+  const { isSelected, toggle, atMax } = useCompare()
+  const selected = isSelected(project.id)
   const isExternal = String(project.id).startsWith('http')
 
   const inner = (
     <>
       <div className="card-header">
         <span className="card-name">{project.name}</span>
-        {badge && (
-          <span className={`card-badge badge-${badge}`}>
-            {badge === 'indexed' ? 'Indexed' : 'Discovered'}
-          </span>
-        )}
+        <div className="card-badges">
+          {project.healthLabel && (
+            <span className={`card-badge health-badge ${healthClass(project.healthLabel)}`}>
+              {project.healthLabel}
+            </span>
+          )}
+          {badge && (
+            <span className={`card-badge badge-${badge}`}>
+              {badge === 'indexed' ? 'Indexed' : 'Discovered'}
+            </span>
+          )}
+        </div>
       </div>
       <p className="card-desc">{project.description}</p>
       <div className="card-meta">
@@ -74,15 +95,37 @@ export function ProjectCard({ project, badge }: Props) {
 
   if (isExternal) {
     return (
-      <a href={project.githubUrl} target="_blank" rel="noreferrer" className="project-card">
-        {inner}
-      </a>
+      <div className="project-card-wrapper">
+        <a href={project.githubUrl} target="_blank" rel="noreferrer" className="project-card">
+          {inner}
+        </a>
+        <button
+          className={`compare-toggle ${selected ? 'compare-toggle-active' : ''}`}
+          disabled={!selected && atMax}
+          onClick={e => { e.preventDefault(); toggle(project) }}
+          aria-label={selected ? `Remove ${project.name} from comparison` : `Add ${project.name} to comparison`}
+          title={!selected && atMax ? 'Maximum 3 projects' : selected ? 'Remove from compare' : 'Add to compare'}
+        >
+          {selected ? '✓' : '+'}
+        </button>
+      </div>
     )
   }
 
   return (
-    <Link to={`/projects/${project.id}`} className="project-card">
-      {inner}
-    </Link>
+    <div className="project-card-wrapper">
+      <Link to={`/projects/${project.id}`} className="project-card">
+        {inner}
+      </Link>
+      <button
+        className={`compare-toggle ${selected ? 'compare-toggle-active' : ''}`}
+        disabled={!selected && atMax}
+        onClick={e => { e.preventDefault(); toggle(project) }}
+        aria-label={selected ? `Remove ${project.name} from comparison` : `Add ${project.name} to comparison`}
+        title={!selected && atMax ? 'Maximum 3 projects' : selected ? 'Remove from compare' : 'Add to compare'}
+      >
+        {selected ? '✓' : '+'}
+      </button>
+    </div>
   )
 }
