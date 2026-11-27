@@ -66,7 +66,7 @@ public class CatalogueClient {
         return new CatalogueImportItem(
                 p.name(), p.description(), p.githubUrl(), p.owner(),
                 p.language(), p.license(), p.stars(), p.forks(),
-                p.topics(), p.lastUpdated()
+                p.topics(), p.lastUpdated(), p.openIssues()
         );
     }
 }

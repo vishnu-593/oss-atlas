@@ -56,6 +56,12 @@ public class Project {
     @Column(name = "last_updated")
     private Instant lastUpdated;
 
+    @Column(name = "open_issues", nullable = false)
+    private Integer openIssues = 0;
+
+    @Column(name = "health_score", nullable = false)
+    private Integer healthScore = 0;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -75,6 +81,8 @@ public class Project {
         if (stars == null) stars = 0;
         if (forks == null) forks = 0;
         if (topics == null) topics = new ArrayList<>();
+        if (openIssues == null) openIssues = 0;
+        if (healthScore == null) healthScore = 0;
     }
 
     @PreUpdate
@@ -178,5 +186,21 @@ public class Project {
 
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    public Integer getOpenIssues() {
+        return openIssues;
+    }
+
+    public void setOpenIssues(Integer openIssues) {
+        this.openIssues = openIssues;
+    }
+
+    public Integer getHealthScore() {
+        return healthScore;
+    }
+
+    public void setHealthScore(Integer healthScore) {
+        this.healthScore = healthScore;
     }
 }

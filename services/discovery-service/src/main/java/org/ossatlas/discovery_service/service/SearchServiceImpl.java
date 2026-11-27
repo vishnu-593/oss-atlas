@@ -10,6 +10,8 @@ import org.ossatlas.discovery_service.integration.github.GhSearchResponse;
 import org.ossatlas.discovery_service.integration.github.GitHubApiClient;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -51,6 +53,10 @@ public class SearchServiceImpl implements SearchService {
     }
 
     public DiscoveryProject toProject(GhRepo repo) {
+        int openIssues = repo.openIssues();
+        int score = healthScore(repo.updatedAt(), repo.stars(), repo.description(),
+                repo.license() != null ? repo.license().spdxId() : null,
+                repo.topics(), openIssues);
         return new DiscoveryProject(
                 repo.name(),
                 repo.description(),
@@ -61,8 +67,63 @@ public class SearchServiceImpl implements SearchService {
                 repo.stars(),
                 repo.forks(),
                 repo.topics() != null ? repo.topics() : List.of(),
-                repo.updatedAt()
+                repo.updatedAt(),
+                openIssues,
+                score,
+                healthLabel(score)
         );
+    }
+
+    static int healthScore(Instant updatedAt, int stars, String description,
+                           String license, List<String> topics, int openIssues) {
+        return recency(updatedAt) + community(stars)
+                + documentation(description, license, topics) + issueHealth(openIssues);
+    }
+
+    static String healthLabel(int score) {
+        if (score >= 85) return "Healthy";
+        if (score >= 65) return "Active";
+        if (score >= 45) return "Moderate";
+        if (score >= 20) return "Low Activity";
+        return "Inactive";
+    }
+
+    private static int recency(Instant updatedAt) {
+        if (updatedAt == null) return 5;
+        long days = ChronoUnit.DAYS.between(updatedAt, Instant.now());
+        if (days < 30)  return 40;
+        if (days < 90)  return 30;
+        if (days < 180) return 20;
+        if (days < 365) return 10;
+        return 0;
+    }
+
+    private static int community(int stars) {
+        if (stars >= 50_000) return 25;
+        if (stars >= 10_000) return 20;
+        if (stars >= 1_000)  return 15;
+        if (stars >= 500)    return 10;
+        if (stars >= 100)    return 6;
+        if (stars >= 10)     return 3;
+        return 0;
+    }
+
+    private static int documentation(String description, String license, List<String> topics) {
+        int pts = 0;
+        if (description != null && !description.isBlank()) pts += 6;
+        if (license     != null && !license.isBlank())     pts += 5;
+        if (topics      != null && !topics.isEmpty())      pts += 4;
+        return pts;
+    }
+
+    private static int issueHealth(int openIssues) {
+        if (openIssues == 0)    return 20;
+        if (openIssues < 5)     return 16;
+        if (openIssues < 20)    return 12;
+        if (openIssues < 50)    return 7;
+        if (openIssues < 200)   return 3;
+        if (openIssues < 1000)  return 1;
+        return 0;
     }
 
     public List<DiscoveryProject> deduplicate(List<DiscoveryProject> projects) {

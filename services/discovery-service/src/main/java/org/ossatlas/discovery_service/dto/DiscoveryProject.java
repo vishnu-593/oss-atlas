@@ -13,5 +13,8 @@ public record DiscoveryProject(
         int stars,
         int forks,
         List<String> topics,
-        Instant lastUpdated
+        Instant lastUpdated,
+        int openIssues,
+        int healthScore,
+        String healthLabel
 ) {}

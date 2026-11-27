@@ -50,7 +50,8 @@ class ProjectServiceTest {
                 75000,
                 40000,
                 List.of("java", "spring", "backend"),
-                Instant.parse("2026-11-20T10:00:00Z")
+                Instant.parse("2026-11-20T10:00:00Z"),
+                null
         );
     }
 
@@ -209,7 +210,8 @@ void updateProjectRejectsDuplicateGithubUrl() {
             100,
             10,
             List.of("java"),
-            Instant.parse("2026-11-20T10:00:00Z")
+            Instant.parse("2026-11-20T10:00:00Z"),
+            null
     );
 
     when(projectRepository.findById(id))

@@ -55,7 +55,8 @@ private ProjectService projectService;
                 1000,
                 200,
                 List.of("java", "spring"),
-                Instant.parse("2026-11-20T10:00:00Z")
+                Instant.parse("2026-11-20T10:00:00Z"),
+                null
         );
     }
 
@@ -73,7 +74,10 @@ private ProjectService projectService;
                 List.of("java", "spring"),
                 Instant.parse("2026-11-20T10:00:00Z"),
                 Instant.parse("2026-11-20T10:00:00Z"),
-                Instant.parse("2026-11-20T10:00:00Z")
+                Instant.parse("2026-11-20T10:00:00Z"),
+                0,
+                85,
+                "Healthy"
         );
     }
 

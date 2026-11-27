@@ -32,10 +32,12 @@ export interface Project {
   forks: number
   topics: string[]
   lastUpdated: string
+  openIssues?: number
+  healthScore?: number
+  healthLabel?: string
   /** Optional fields not guaranteed by API contract */
   category?: Category
   isIndexed?: boolean
-  openIssues?: number
   homepage?: string
 }
 
