@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import type { Project } from '../types/project'
-import { getProjectById, getProjectReadme } from '../services/catalogueService'
+import { getProjectById, getProjectReadme, getProjects } from '../services/catalogueService'
 import { LoadingState } from '../components/LoadingState'
 import { ErrorState } from '../components/ErrorState'
+import { ProjectCard } from '../components/ProjectCard'
 import './ProjectDetailsPage.css'
 
 function formatNumber(n: number): string {
@@ -15,6 +16,7 @@ export function ProjectDetailsPage() {
   const { id } = useParams<{ id: string }>()
   const [project, setProject] = useState<Project | null>(null)
   const [readme, setReadme] = useState<string | null>(null)
+  const [similar, setSimilar] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -23,9 +25,15 @@ export function ProjectDetailsPage() {
     setLoading(true)
     setError(null)
     setReadme(null)
+    setSimilar([])
     getProjectById(id)
       .then(p => {
         setProject(p)
+        if (p.language) {
+          getProjects({ language: p.language }, 0, 8)
+            .then(r => setSimilar(r.content.filter(s => s.id !== id).slice(0, 4)))
+            .catch(() => {})
+        }
         return getProjectReadme(id)
       })
       .then(setReadme)
@@ -103,6 +111,15 @@ export function ProjectDetailsPage() {
           <div className="details-readme">
             <h3>README</h3>
             <pre className="readme-content">{readme}</pre>
+          </div>
+        )}
+
+        {similar.length > 0 && (
+          <div className="similar-section">
+            <h3 className="similar-title">Similar Projects</h3>
+            <div className="similar-grid">
+              {similar.map(s => <ProjectCard key={s.id} project={s} />)}
+            </div>
           </div>
         )}
       </div>

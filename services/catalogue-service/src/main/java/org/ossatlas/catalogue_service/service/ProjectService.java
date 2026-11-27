@@ -5,6 +5,7 @@ import org.ossatlas.catalogue_service.dto.ImportProjectsRequest;
 import org.ossatlas.catalogue_service.dto.ImportProjectsResponse;
 import org.ossatlas.catalogue_service.dto.ProjectRequest;
 import org.ossatlas.catalogue_service.dto.ProjectResponse;
+import org.ossatlas.catalogue_service.dto.StatsResponse;
 import org.ossatlas.catalogue_service.entity.Project;
 import org.ossatlas.catalogue_service.repository.ProjectRepository;
 import org.springframework.data.domain.Page;
@@ -16,12 +17,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 
 @Service
@@ -246,6 +246,38 @@ public Page<ProjectResponse> searchProjects(
 
 private String normalize(String value) {
     return value == null || value.isBlank() ? null : value.trim();
+}
+
+@Transactional(readOnly = true)
+public StatsResponse getStats() {
+    long total = projectRepository.count();
+
+    List<StatsResponse.NameCount> languages = projectRepository.countByLanguage()
+            .stream()
+            .map(r -> new StatsResponse.NameCount((String) r[0], ((Number) r[1]).longValue()))
+            .toList();
+
+    List<StatsResponse.NameCount> licenses = projectRepository.countByLicense()
+            .stream()
+            .map(r -> new StatsResponse.NameCount((String) r[0], ((Number) r[1]).longValue()))
+            .toList();
+
+    List<StatsResponse.NameCount> health = projectRepository.countByHealth()
+            .stream()
+            .map(r -> new StatsResponse.NameCount((String) r[0], ((Number) r[1]).longValue()))
+            .sorted(Comparator.comparingInt(nc -> healthOrder(nc.name())))
+            .toList();
+
+    return new StatsResponse(total, languages, licenses, health);
+}
+
+private int healthOrder(String name) {
+    return switch (name) {
+        case "Active"   -> 0;
+        case "Healthy"  -> 1;
+        case "Slow"     -> 2;
+        default         -> 3;
+    };
 }
 
 

@@ -1,4 +1,4 @@
-import type { Project, ProjectFilters, PagedResponse } from '../types/project'
+import type { Project, ProjectFilters, PagedResponse, CatalogueStats } from '../types/project'
 import { fetchJson, API_URLS } from './apiClient'
 
 interface RawProject {
@@ -74,8 +74,11 @@ export async function getProjectById(id: string): Promise<Project> {
   return toProject(raw)
 }
 
-export async function getProjectReadme(id: string): Promise<string | null> {
-  try {
+export async function getCatalogueStats(): Promise<CatalogueStats> {
+  return fetchJson<CatalogueStats>(`${API_URLS.CATALOGUE_BASE}/api/projects/stats`)
+}
+
+export async function getProjectReadme(id: string): Promise<string | null> {  try {
     const res = await fetch(`${API_URLS.CATALOGUE_BASE}/api/projects/${id}/readme`, {
       signal: AbortSignal.timeout(5000),
     })

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -17,10 +18,37 @@ public interface ProjectRepository extends JpaRepository<Project, UUID> {
 
     boolean existsByGithubUrl(String githubUrl);
 
-    
-    
+    @Query(value = "SELECT language AS name, COUNT(*) AS cnt FROM projects " +
+                   "WHERE language IS NOT NULL AND language <> '' " +
+                   "GROUP BY language ORDER BY cnt DESC LIMIT 8",
+           nativeQuery = true)
+    List<Object[]> countByLanguage();
 
-@Query(value = """
+    @Query(value = "SELECT license AS name, COUNT(*) AS cnt FROM projects " +
+                   "WHERE license IS NOT NULL AND license <> '' " +
+                   "GROUP BY license ORDER BY cnt DESC",
+           nativeQuery = true)
+    List<Object[]> countByLicense();
+
+    @Query(value = """
+        SELECT s.h AS name, COUNT(*) AS cnt
+        FROM (
+            SELECT
+                CASE
+                    WHEN last_updated >= NOW() - INTERVAL '3 months'  THEN 'Active'
+                    WHEN last_updated >= NOW() - INTERVAL '12 months' THEN 'Healthy'
+                    WHEN last_updated >= NOW() - INTERVAL '24 months' THEN 'Slow'
+                    ELSE 'Inactive'
+                END AS h
+            FROM projects
+            WHERE last_updated IS NOT NULL
+        ) s
+        GROUP BY s.h
+        """,
+           nativeQuery = true)
+    List<Object[]> countByHealth();
+
+    @Query(value = """
     SELECT *
     FROM projects
     WHERE

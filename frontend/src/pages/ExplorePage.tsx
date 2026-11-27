@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import type { ProjectFilters } from '../types/project'
+import type { ProjectFilters, Project } from '../types/project'
 import { useProjects } from '../hooks/useProjects'
 import { ProjectCard } from '../components/ProjectCard'
 import { FilterPanel } from '../components/FilterPanel'
@@ -8,6 +8,8 @@ import { Pagination } from '../components/Pagination'
 import { LoadingState } from '../components/LoadingState'
 import { ErrorState } from '../components/ErrorState'
 import { EmptyState } from '../components/EmptyState'
+import { StatsPanel } from '../components/StatsPanel'
+import { ComparisonDrawer } from '../components/ComparisonDrawer'
 import './ExplorePage.css'
 
 export function ExplorePage() {
@@ -17,6 +19,7 @@ export function ExplorePage() {
   })
   const [page, setPage] = useState(0)
   const { data, loading, error, reload } = useProjects(filters, page)
+  const [compareMap, setCompareMap] = useState<Map<string, Project>>(new Map())
 
   useEffect(() => {
     const q = searchParams.get('q')
@@ -34,8 +37,22 @@ export function ExplorePage() {
     handleFiltersChange({ ...filters, search: q })
   }
 
+  function handleToggleCompare(project: Project) {
+    setCompareMap(prev => {
+      const next = new Map(prev)
+      if (next.has(project.id)) {
+        next.delete(project.id)
+      } else if (next.size < 3) {
+        next.set(project.id, project)
+      }
+      return next
+    })
+  }
+
+  const compareProjects = Array.from(compareMap.values())
+
   return (
-    <div className="explore-page">
+    <div className="explore-page" style={{ paddingBottom: compareProjects.length > 0 ? '14rem' : undefined }}>
       <div className="explore-header">
         <h1>Browse Catalogue</h1>
         <p>Explore {data?.totalElements ?? '…'} open-source projects</p>
@@ -53,6 +70,8 @@ export function ExplorePage() {
         </form>
       </div>
 
+      <StatsPanel />
+
       <div className="explore-body">
         <FilterPanel filters={filters} onChange={handleFiltersChange} />
         <div className="explore-results">
@@ -64,7 +83,14 @@ export function ExplorePage() {
                 <EmptyState message="No projects match your filters." />
               ) : (
                 <div className="projects-grid">
-                  {data.content.map(p => <ProjectCard key={p.id} project={p} />)}
+                  {data.content.map(p => (
+                    <ProjectCard
+                      key={p.id}
+                      project={p}
+                      compareSelected={compareMap.has(p.id)}
+                      onToggleCompare={handleToggleCompare}
+                    />
+                  ))}
                 </div>
               )}
               <Pagination page={data.page} totalPages={data.totalPages} onPageChange={setPage} />
@@ -72,6 +98,12 @@ export function ExplorePage() {
           )}
         </div>
       </div>
+
+      <ComparisonDrawer
+        projects={compareProjects}
+        onRemove={id => setCompareMap(prev => { const m = new Map(prev); m.delete(id); return m })}
+        onClear={() => setCompareMap(new Map())}
+      />
     </div>
   )
 }

@@ -4,6 +4,7 @@ package org.ossatlas.catalogue_service.controller;
 import jakarta.validation.Valid;
 import org.ossatlas.catalogue_service.dto.ProjectRequest;
 import org.ossatlas.catalogue_service.dto.ProjectResponse;
+import org.ossatlas.catalogue_service.dto.StatsResponse;
 import org.ossatlas.catalogue_service.service.ProjectService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -75,6 +76,11 @@ public Page<ProjectResponse> getAllProjects(
     }
 
 
+
+    @GetMapping("/stats")
+    public StatsResponse getStats() {
+        return projectService.getStats();
+    }
 
 @GetMapping("/search")
 public Page<ProjectResponse> searchProjects(

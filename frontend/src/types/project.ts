@@ -54,6 +54,13 @@ export interface PagedResponse<T> {
   size: number
 }
 
+export interface CatalogueStats {
+  totalProjects: number
+  topLanguages:       { name: string; count: number }[]
+  licenseDistribution: { name: string; count: number }[]
+  healthDistribution:  { name: string; count: number }[]
+}
+
 export interface DiscoveryRequest {
   query: string
   language?: string

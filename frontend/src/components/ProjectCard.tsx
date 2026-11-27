@@ -10,9 +10,11 @@ function fmt(n: number): string {
 interface Props {
   project: Project
   badge?: 'indexed' | 'discovered'
+  compareSelected?: boolean
+  onToggleCompare?: (project: Project) => void
 }
 
-export function ProjectCard({ project, badge }: Props) {
+export function ProjectCard({ project, badge, compareSelected, onToggleCompare }: Props) {
   const isExternal = String(project.id).startsWith('http')
 
   const inner = (
@@ -67,6 +69,15 @@ export function ProjectCard({ project, badge }: Props) {
             </svg>
             {fmt(project.openIssues)}
           </span>
+        )}
+        {onToggleCompare && (
+          <button
+            className={`card-compare-btn${compareSelected ? ' card-compare-btn--on' : ''}`}
+            onClick={e => { e.preventDefault(); e.stopPropagation(); onToggleCompare(project) }}
+            title={compareSelected ? 'Remove from comparison' : 'Add to comparison'}
+          >
+            {compareSelected ? '✓ Comparing' : '+ Compare'}
+          </button>
         )}
       </div>
     </>
