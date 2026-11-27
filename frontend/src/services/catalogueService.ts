@@ -59,12 +59,12 @@ export async function getProjects(
     url = `${API_URLS.CATALOGUE_BASE}/api/projects?${params}`
   }
 
-  const raw = await fetchJson<PagedResponse<RawProject>>(url)
+  const raw = await fetchJson<PagedResponse<RawProject> & { number: number }>(url)
   return {
     content: raw.content.map(toProject),
     totalElements: raw.totalElements,
     totalPages: raw.totalPages,
-    page: raw.page,
+    page: raw.number ?? 0,
     size: raw.size,
   }
 }
