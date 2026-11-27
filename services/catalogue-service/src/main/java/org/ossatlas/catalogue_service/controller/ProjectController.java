@@ -16,6 +16,7 @@ import org.ossatlas.catalogue_service.dto.ImportProjectsResponse;
 import org.springframework.data.domain.Page;
 
 @RestController
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:4173"})
 @RequestMapping("/api/projects")
 public class ProjectController {
 

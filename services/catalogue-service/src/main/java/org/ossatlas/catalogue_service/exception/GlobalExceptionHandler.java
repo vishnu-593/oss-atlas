@@ -13,6 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -56,6 +57,19 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(response);
     }
+
+@ExceptionHandler(DataIntegrityViolationException.class)
+public ResponseEntity<Map<String, Object>> handleDataIntegrityViolation(
+        DataIntegrityViolationException ex) {
+
+    Map<String, Object> body = new HashMap<>();
+    body.put("timestamp", Instant.now());
+    body.put("status", HttpStatus.CONFLICT.value());
+    body.put("error", "Conflict");
+    body.put("message", "A project with this GitHub URL already exists");
+
+    return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+}
 
 @ExceptionHandler(ResponseStatusException.class)
 public ResponseEntity<Map<String, Object>> handleResponseStatusException(

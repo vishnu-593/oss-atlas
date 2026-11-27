@@ -7,27 +7,19 @@ import org.ossatlas.catalogue_service.dto.ProjectRequest;
 import org.ossatlas.catalogue_service.dto.ProjectResponse;
 import org.ossatlas.catalogue_service.entity.Project;
 import org.ossatlas.catalogue_service.repository.ProjectRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.http.HttpStatus;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.UUID;
-
-import org.ossatlas.catalogue_service.dto.ImportProjectsRequest;
-import org.ossatlas.catalogue_service.dto.ImportProjectsResponse;
-
-import java.util.HashSet;
-import java.util.Set;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -44,8 +36,9 @@ public class ProjectService {
 
     // Create a project
     public ProjectResponse createProject(ProjectRequest request) {
+        String githubUrl = request.githubUrl().trim().replaceAll("/+$", "");
 
-        if (projectRepository.existsByGithubUrl(request.githubUrl())) {
+        if (projectRepository.existsByGithubUrl(githubUrl)) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "Project with this GitHub URL already exists"
@@ -53,21 +46,11 @@ public class ProjectService {
         }
 
         Project project = new Project();
-        updateProjectFields(project, request);
+        updateProjectFields(project, normalizeRequest(request, githubUrl));
 
         Project savedProject = projectRepository.save(project);
 
         return mapToResponse(savedProject);
-    }
-
-    // Get all projects
-    @Transactional(readOnly = true)
-    public List<ProjectResponse> getAllProjects() {
-
-        return projectRepository.findAll()
-                .stream()
-                .map(this::mapToResponse)
-                .toList();
     }
 
     // Get project by ID
@@ -85,6 +68,7 @@ public class ProjectService {
 
     // Update project
     public ProjectResponse updateProject(UUID id, ProjectRequest request) {
+        String githubUrl = request.githubUrl().trim().replaceAll("/+$", "");
 
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -92,7 +76,7 @@ public class ProjectService {
                         "Project not found with ID: " + id
                 ));
 
-        projectRepository.findByGithubUrl(request.githubUrl())
+        projectRepository.findByGithubUrl(githubUrl)
                 .filter(existing -> !existing.getId().equals(id))
                 .ifPresent(existing -> {
                     throw new ResponseStatusException(
@@ -101,7 +85,7 @@ public class ProjectService {
                     );
                 });
 
-        updateProjectFields(project, request);
+        updateProjectFields(project, normalizeRequest(request, githubUrl));
 
         return mapToResponse(projectRepository.save(project));
     }
@@ -134,6 +118,14 @@ public class ProjectService {
                 request.topics() == null ? List.of() : request.topics()
         );
         project.setLastUpdated(request.lastUpdated());
+    }
+
+    private ProjectRequest normalizeRequest(ProjectRequest request, String normalizedUrl) {
+        return new ProjectRequest(
+                request.name(), request.description(), normalizedUrl,
+                request.owner(), request.language(), request.license(),
+                request.stars(), request.forks(), request.topics(), request.lastUpdated()
+        );
     }
 
     // Map entity to response DTO
@@ -220,10 +212,6 @@ public Page<ProjectResponse> getAllProjects(
         String sortBy,
         String direction
 ) {
-    Sort sort = direction.equalsIgnoreCase("desc")
-            ? Sort.by(sortBy).descending()
-            : Sort.by(sortBy).ascending();
-
     Pageable pageable = createPageable(
         page, size, sortBy, direction
 );
